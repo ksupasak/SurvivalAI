@@ -1,0 +1,13 @@
+{
+  "name": "survivalai-website",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npx serve public",
+    "build": "echo 'Static site — no build step required'",
+    "preview": "npx serve public -p 3001"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

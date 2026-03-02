@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Terms of Service - SurvivalAI</title>
+  <meta name="description" content="SurvivalAI Terms of Service. Read our terms and conditions for using the SurvivalAI app.">
+  <meta name="theme-color" content="#0A0E17">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0A0E17;
+      --bg-secondary: #111827;
+      --bg-card: #151D2B;
+      --bg-card-hover: #1C2740;
+      --amber: #FFB800;
+      --amber-dark: #CC9300;
+      --amber-light: #FFD54F;
+      --green: #00FF41;
+      --green-dim: rgba(0,255,65,0.15);
+      --red: #FF3B3B;
+      --red-dim: rgba(255,59,59,0.15);
+      --blue: #3B82F6;
+      --cyan: #00D4FF;
+      --text: #E8ECF1;
+      --text-secondary: #8B95A5;
+      --text-dim: #4A5568;
+      --border: #1E293B;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* ===== NAVBAR ===== */
+    .navbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(10,14,23,0.92);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      height: 70px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-brand {
+      display: flex; align-items: center; gap: 12px;
+      text-decoration: none; color: var(--text);
+    }
+    .nav-brand .logo-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--amber), var(--amber-dark));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 800; color: var(--bg);
+    }
+    .nav-brand span {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700; font-size: 18px; letter-spacing: 2px;
+    }
+    .nav-links { display: flex; gap: 2rem; align-items: center; }
+    .nav-links a {
+      color: var(--text-secondary); text-decoration: none;
+      font-size: 14px; font-weight: 500; letter-spacing: 0.5px;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--amber); }
+    .nav-cta {
+      background: var(--amber) !important; color: var(--bg) !important;
+      padding: 10px 24px !important; border-radius: 8px;
+      font-weight: 700 !important; font-size: 13px !important;
+      letter-spacing: 1px; text-transform: uppercase;
+      transition: background 0.2s !important;
+    }
+    .nav-cta:hover { background: var(--amber-light) !important; }
+
+    /* ===== PAGE ===== */
+    .page-wrapper {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 120px 2rem 80px;
+    }
+
+    .page-header {
+      margin-bottom: 3rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .page-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px; color: var(--amber); letter-spacing: 3px;
+      text-transform: uppercase; font-weight: 600; margin-bottom: 1rem;
+    }
+    .page-header h1 {
+      font-size: clamp(2rem, 4vw, 2.8rem); font-weight: 800;
+      margin-bottom: 1rem;
+    }
+    .page-header .meta {
+      color: var(--text-dim); font-size: 0.875rem;
+    }
+    .page-header .meta span {
+      color: var(--text-secondary);
+    }
+
+    /* ===== CONTENT ===== */
+    .doc-section {
+      margin-bottom: 2.5rem;
+    }
+    .doc-section h2 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem; font-weight: 700;
+      color: var(--amber); letter-spacing: 2px;
+      text-transform: uppercase; margin-bottom: 0.75rem;
+    }
+    .doc-section h3 {
+      font-size: 1.1rem; font-weight: 700;
+      color: var(--text); margin-bottom: 0.5rem; margin-top: 1.25rem;
+    }
+    .doc-section p {
+      color: var(--text-secondary); font-size: 0.95rem;
+      line-height: 1.75; margin-bottom: 0.75rem;
+    }
+    .doc-section ul {
+      list-style: none; padding: 0; margin-bottom: 0.75rem;
+    }
+    .doc-section ul li {
+      color: var(--text-secondary); font-size: 0.95rem;
+      line-height: 1.75; padding: 0.3rem 0;
+      padding-left: 1.25rem; position: relative;
+    }
+    .doc-section ul li::before {
+      content: '›'; position: absolute; left: 0;
+      color: var(--amber); font-weight: 700;
+    }
+
+    .highlight-box {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-left: 3px solid var(--amber);
+      border-radius: 10px; padding: 1.25rem 1.5rem;
+      margin: 1.5rem 0;
+    }
+    .highlight-box p {
+      color: var(--text); font-size: 0.95rem; margin: 0;
+    }
+
+    .warning-box {
+      background: rgba(255,59,59,0.06); border: 1px solid rgba(255,59,59,0.2);
+      border-left: 3px solid var(--red);
+      border-radius: 10px; padding: 1.25rem 1.5rem;
+      margin: 1.5rem 0;
+    }
+    .warning-box p {
+      color: var(--text-secondary); font-size: 0.9rem; margin: 0;
+    }
+    .warning-box strong { color: var(--red); }
+
+    .divider {
+      border: none; border-top: 1px solid var(--border);
+      margin: 2.5rem 0;
+    }
+
+    /* ===== FOOTER ===== */
+    .footer {
+      padding: 3rem 2rem; border-top: 1px solid var(--border);
+      text-align: center;
+    }
+    .footer p { color: var(--text-dim); font-size: 0.85rem; }
+    .footer .morse {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--amber); font-size: 12px; margin-top: 0.5rem;
+      letter-spacing: 2px;
+    }
+    .footer-links {
+      display: flex; gap: 2rem; justify-content: center;
+      margin-bottom: 1rem; flex-wrap: wrap;
+    }
+    .footer-links a {
+      color: var(--text-dim); text-decoration: none;
+      font-size: 0.85rem; transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--amber); }
+
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .page-wrapper { padding: 100px 1.25rem 60px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <a href="index.html" class="nav-brand">
+      <div class="logo-icon">S</div>
+      <span>SURVIVALAI</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html#features">Features</a>
+      <a href="index.html#knowledge">Knowledge</a>
+      <a href="index.html#profile">Profile</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="index.html#download" class="nav-cta">Download</a>
+    </div>
+  </nav>
+
+  <!-- PAGE CONTENT -->
+  <main class="page-wrapper">
+
+    <div class="page-header">
+      <div class="page-tag">// Legal</div>
+      <h1>Terms of Service</h1>
+      <p class="meta">Last updated: <span>March 2026</span> &nbsp;·&nbsp; Version <span>1.0</span></p>
+    </div>
+
+    <div class="highlight-box">
+      <p>By downloading or using SurvivalAI, you agree to these terms. Please read them carefully. SurvivalAI is a free, offline-first emergency tool. We do not collect your data, run subscriptions, or require an account.</p>
+    </div>
+
+    <!-- 1 -->
+    <div class="doc-section">
+      <h2>01 — Acceptance of Terms</h2>
+      <p>These Terms of Service ("Terms") govern your use of the SurvivalAI mobile application ("App") and the SurvivalAI website ("Site"). By downloading, installing, or using the App, you agree to be bound by these Terms. If you do not agree, please do not use the App.</p>
+      <p>These Terms apply to all users of the App, including without limitation users who browse, contribute content, or use the App's features in any capacity.</p>
+    </div>
+
+    <hr class="divider">
+
+    <!-- 2 -->
+    <div class="doc-section">
+      <h2>02 — Description of Service</h2>
+      <p>SurvivalAI is a mobile application designed to assist individuals in emergency, disaster, and survival scenarios. The App provides:</p>
+      <ul>
+        <li>An offline knowledge base covering survival techniques, first aid, and emergency procedures</li>
+        <li>An AI chat assistant powered by on-device or cloud language models</li>
+        <li>A supply calculator for emergency preparedness planning</li>
+        <li>Morse code sending (via flashlight) and reading (via camera) tools</li>
+        <li>A "Seeking Mode" BLE/WiFi beacon for rescue team detection</li>
+        <li>A personal emergency profile stored locally on your device</li>
+      </ul>
+      <p>The App is intended for informational and preparedness purposes. It is not a substitute for professional emergency services, medical advice, or trained first responders.</p>
+    </div>
+
+    <hr class="divider">
+
+    <!-- 3 -->
+    <div class="doc-section">
+      <h2>03 — Emergency Disclaimer</h2>
+      <div class="warning-box">
+        <p><strong>IMPORTANT:</strong> SurvivalAI is an informational tool only. In any life-threatening emergency, always attempt to contact official emergency services (911, 112, 999, or your local emergency number) first. The App's guidance does not replace professional medical, military, or emergency responder training and judgment.</p>
+      </div>
+      <p>We make no guarantee that following the App's advice will prevent injury, illness, or death. Survival situations involve inherently unpredictable variables. You use this information at your own risk.</p>
+      <p>The Seeking Mode BLE beacon is a supplemental signaling tool only. It is not guaranteed to be detected by rescue teams, and its effectiveness depends on the proximity of compatible devices and rescue infrastructure.</p>
+    </div>
+
+    <hr class="divider">
+
+    <!-- 4 -->
+    <div class="doc-section">
+      <h2>04 — Permitted Use</h2>
+      <p>You may use SurvivalAI for personal, non-commercial emergency preparedness and survival purposes. You agree not to:</p>
+      <ul>
+        <li>Use the App for any unlawful purpose or in violation of applicable laws or regulations</li>
+        <li>Transmit false SOS or distress signals via Morse code or BLE beacon</li>
+        <li>Reverse engineer, decompile, or disassemble any part of the App beyond what is permitted by applicable law</li>
+        <li>Distribute, sell, or sublicense the App or its components without written permission</li>
+        <li>Use the App to harass, harm, or deceive other individuals or rescue personnel</li>
+        <li>Attempt to interfere with the operation of the App or its underlying systems</li>
+      </ul>
+    </div>
+
+    <hr class="divider">
+
+    <!-- 5 -->
+    <div class="doc-section">
+      <h2>05 — Intellectual Property</h2>
+      <p>The SurvivalAI App, including its design, code, survival knowledge content, and branding, is protected by copyright and other intellectual property laws.</p>
+      <p>Open-source components used in the App are licensed under their respective licenses (MIT, Apache 2.0, etc.). The bundled survival knowledge base is compiled from publicly available sources including government publications (FEMA, WHO, military field manuals) which are in the public domain.</p>
+      <p>Bundled third-party government documents (e.g., FEMA guides, FM 21-76, Red Cross manuals) remain the property of their respective issuing organizations and are used for non-commercial informational purposes.</p>
+    </div>
+
+    <hr class="divider">
+
+    <!-- 6 -->
+    <div class="doc-section">
+      <h2>06 — AI-Generated Content</h2>
+      <p>The App may use on-device large language models (LLMs) or cloud-based AI services (such as OpenAI's ChatGPT API) to generate responses. You acknowledge that:</p>
+      <ul>
+        <li>AI-generated content may contain errors, inaccuracies, or outdated information</li>
+        <li>AI responses are not reviewed or verified by medical or survival professionals in real time</li>
+        <li>You should verify critical survival information against multiple sources when possible</li>
+        <li>When using the online AI mode, your query text is transmitted to the respective AI provider (e.g., OpenAI) and subject to their terms of service and privacy policy</li>
+      </ul>
+      <p>We recommend using the offline knowledge base mode in situations where reliable, pre-verified information is critical.</p>
+    </div>
+
+    <hr class="divider">
+
+    <!-- 7 -->
+    <div class="doc-section">
+      <h2>07 — Bluetooth and Camera Permissions</h2>
+      <p>The App requires certain device permissions to function:</p>
+      <ul>
+        <li><strong>Camera:</strong> Used for Morse code light signal detection (Read mode). Camera feed is processed entirely on-device and is never transmitted or stored.</li>
+        <li><strong>Flashlight (Torch):</strong> Used to transmit Morse code signals.</li>
+        <li><strong>Bluetooth (BLE):</strong> Used in Seeking Mode to broadcast a rescue beacon. No data is stored in BLE advertisements beyond what you explicitly configure in your profile.</li>
+        <li><strong>Location:</strong> Used optionally to include GPS coordinates in the BLE beacon for rescue teams. Location data is not uploaded to any server.</li>
+        <li><strong>Microphone:</strong> Used for voice-to-text input in the AI chat. Audio is processed on-device or through your chosen AI provider's API and is not stored by SurvivalAI.</li>
+      </ul>
+      <p>You may revoke any permission at any time through your device's system settings. Revoking permissions will disable the corresponding App features.</p>
+    </div>
+
+    <hr class="divider">
+
+    <!-- 8 -->
+    <div class="doc-section">
+      <h2>08 — Limitation of Liability</h2>
+      <p>To the maximum extent permitted by applicable law, SurvivalAI and its developers shall not be liable for any direct, indirect, incidental, special, consequential, or punitive damages arising from:</p>
+      <ul>
+        <li>Your use of or inability to use the App</li>
+        <li>Any reliance on information provided by the App</li>
+        <li>Outcomes of survival situations in which you followed the App's guidance</li>
+        <li>Failure of the Seeking Mode beacon to be detected</li>
+        <li>Errors or omissions in the App's knowledge base or AI responses</li>
+        <li>App unavailability, bugs, or malfunction</li>
+      </ul>
+      <p>The App is provided "as is" and "as available" without warranties of any kind, express or implied, including but not limited to fitness for a particular purpose or accuracy of survival guidance.</p>
+    </div>
+
+    <hr class="divider">
+
+    <!-- 9 -->
+    <div class="doc-section">
+      <h2>09 — Open Source</h2>
+      <p>SurvivalAI is open source. The source code is available for review, contribution, and non-commercial reuse under the project's open-source license. Contributing to the project is subject to the project's contributor guidelines.</p>
+      <p>If you distribute a modified version of the App, you must clearly distinguish it from the official SurvivalAI release and comply with the applicable open-source license terms.</p>
+    </div>
+
+    <hr class="divider">
+
+    <!-- 10 -->
+    <div class="doc-section">
+      <h2>10 — Changes to These Terms</h2>
+      <p>We may update these Terms from time to time. When we do, we will update the "Last updated" date at the top of this page. Continued use of the App after changes constitutes your acceptance of the revised Terms.</p>
+      <p>For significant changes, we will include a notice within the App on next launch.</p>
+    </div>
+
+    <hr class="divider">
+
+    <!-- 11 -->
+    <div class="doc-section">
+      <h2>11 — Governing Law</h2>
+      <p>These Terms are governed by and construed in accordance with applicable laws. If any provision of these Terms is found to be unenforceable, the remaining provisions will remain in full force and effect.</p>
+    </div>
+
+    <hr class="divider">
+
+    <!-- 12 -->
+    <div class="doc-section">
+      <h2>12 — Contact</h2>
+      <p>If you have questions about these Terms, please open an issue on the project's public repository or reach out through the official SurvivalAI website.</p>
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="terms.html">Terms of Service</a>
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="index.html#download">Download</a>
+    </div>
+    <p>&copy; 2026 SurvivalAI. Built for humanity. Open source.</p>
+    <div class="morse">... ..- .-. ...- .. ...- .- .-.. .- ..</div>
+    <p style="margin-top: 0.5rem; font-size: 12px; color: var(--text-dim);">"SURVIVALAI" in Morse Code</p>
+  </footer>
+
+</body>
+</html>

@@ -1,0 +1,5 @@
+# SurvivalAI - Cloudflare Pages redirects
+/terms          /terms.html     301
+/privacy        /privacy.html   301
+/tos            /terms.html     301
+/download       /#download      301

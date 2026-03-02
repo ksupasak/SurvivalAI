@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy - SurvivalAI</title>
+  <meta name="description" content="SurvivalAI Privacy Policy. Learn how we protect your data. No data collection, no servers, your information stays on your device.">
+  <meta name="theme-color" content="#0A0E17">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0A0E17;
+      --bg-secondary: #111827;
+      --bg-card: #151D2B;
+      --bg-card-hover: #1C2740;
+      --amber: #FFB800;
+      --amber-dark: #CC9300;
+      --amber-light: #FFD54F;
+      --green: #00FF41;
+      --green-dim: rgba(0,255,65,0.15);
+      --red: #FF3B3B;
+      --red-dim: rgba(255,59,59,0.15);
+      --blue: #3B82F6;
+      --cyan: #00D4FF;
+      --text: #E8ECF1;
+      --text-secondary: #8B95A5;
+      --text-dim: #4A5568;
+      --border: #1E293B;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* ===== NAVBAR ===== */
+    .navbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(10,14,23,0.92);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      height: 70px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-brand {
+      display: flex; align-items: center; gap: 12px;
+      text-decoration: none; color: var(--text);
+    }
+    .nav-brand .logo-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--amber), var(--amber-dark));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 800; color: var(--bg);
+    }
+    .nav-brand span {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700; font-size: 18px; letter-spacing: 2px;
+    }
+    .nav-links { display: flex; gap: 2rem; align-items: center; }
+    .nav-links a {
+      color: var(--text-secondary); text-decoration: none;
+      font-size: 14px; font-weight: 500; letter-spacing: 0.5px;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--amber); }
+    .nav-cta {
+      background: var(--amber) !important; color: var(--bg) !important;
+      padding: 10px 24px !important; border-radius: 8px;
+      font-weight: 700 !important; font-size: 13px !important;
+      letter-spacing: 1px; text-transform: uppercase;
+      transition: background 0.2s !important;
+    }
+    .nav-cta:hover { background: var(--amber-light) !important; }
+
+    /* ===== PAGE ===== */
+    .page-wrapper {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 120px 2rem 80px;
+    }
+
+    .page-header {
+      margin-bottom: 3rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .page-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px; color: var(--green); letter-spacing: 3px;
+      text-transform: uppercase; font-weight: 600; margin-bottom: 1rem;
+    }
+    .page-header h1 {
+      font-size: clamp(2rem, 4vw, 2.8rem); font-weight: 800;
+      margin-bottom: 1rem;
+    }
+    .page-header .meta {
+      color: var(--text-dim); font-size: 0.875rem;
+    }
+    .page-header .meta span {
+      color: var(--text-secondary);
+    }
+
+    /* ===== SUMMARY CARDS ===== */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem; margin-bottom: 3rem;
+    }
+    .summary-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1.25rem;
+      text-align: center;
+    }
+    .summary-card .icon { font-size: 1.75rem; margin-bottom: 0.5rem; }
+    .summary-card h4 {
+      font-size: 0.875rem; font-weight: 700;
+      margin-bottom: 0.25rem; color: var(--text);
+    }
+    .summary-card p {
+      font-size: 0.8rem; color: var(--text-dim);
+    }
+    .summary-card.good { border-top: 2px solid var(--green); }
+
+    /* ===== CONTENT ===== */
+    .doc-section {
+      margin-bottom: 2.5rem;
+    }
+    .doc-section h2 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem; font-weight: 700;
+      color: var(--green); letter-spacing: 2px;
+      text-transform: uppercase; margin-bottom: 0.75rem;
+    }
+    .doc-section h3 {
+      font-size: 1.1rem; font-weight: 700;
+      color: var(--text); margin-bottom: 0.5rem; margin-top: 1.25rem;
+    }
+    .doc-section p {
+      color: var(--text-secondary); font-size: 0.95rem;
+      line-height: 1.75; margin-bottom: 0.75rem;
+    }
+    .doc-section ul {
+      list-style: none; padding: 0; margin-bottom: 0.75rem;
+    }
+    .doc-section ul li {
+      color: var(--text-secondary); font-size: 0.95rem;
+      line-height: 1.75; padding: 0.3rem 0;
+      padding-left: 1.25rem; position: relative;
+    }
+    .doc-section ul li::before {
+      content: '›'; position: absolute; left: 0;
+      color: var(--green); font-weight: 700;
+    }
+
+    .highlight-box {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-left: 3px solid var(--green);
+      border-radius: 10px; padding: 1.25rem 1.5rem;
+      margin: 1.5rem 0;
+    }
+    .highlight-box p {
+      color: var(--text); font-size: 0.95rem; margin: 0;
+    }
+
+    .data-table {
+      width: 100%; border-collapse: collapse;
+      margin: 1rem 0;
+    }
+    .data-table th {
+      background: var(--bg-card); color: var(--amber);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem; letter-spacing: 1px;
+      text-transform: uppercase; padding: 10px 14px;
+      text-align: left; border-bottom: 1px solid var(--border);
+    }
+    .data-table td {
+      padding: 10px 14px; font-size: 0.875rem;
+      color: var(--text-secondary); border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table td:first-child { color: var(--text); font-weight: 500; }
+    .badge {
+      display: inline-block; padding: 2px 8px; border-radius: 999px;
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.5px;
+    }
+    .badge.local { background: var(--green-dim); color: var(--green); }
+    .badge.third-party { background: rgba(59,130,246,0.15); color: var(--blue); }
+    .badge.never { background: rgba(74,85,104,0.3); color: var(--text-dim); }
+
+    .divider {
+      border: none; border-top: 1px solid var(--border);
+      margin: 2.5rem 0;
+    }
+
+    /* ===== FOOTER ===== */
+    .footer {
+      padding: 3rem 2rem; border-top: 1px solid var(--border);
+      text-align: center;
+    }
+    .footer p { color: var(--text-dim); font-size: 0.85rem; }
+    .footer .morse {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--amber); font-size: 12px; margin-top: 0.5rem;
+      letter-spacing: 2px;
+    }
+    .footer-links {
+      display: flex; gap: 2rem; justify-content: center;
+      margin-bottom: 1rem; flex-wrap: wrap;
+    }
+    .footer-links a {
+      color: var(--text-dim); text-decoration: none;
+      font-size: 0.85rem; transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--amber); }
+
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .page-wrapper { padding: 100px 1.25rem 60px; }
+      .data-table { font-size: 0.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <a href="index.html" class="nav-brand">
+      <div class="logo-icon">S</div>
+      <span>SURVIVALAI</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html#features">Features</a>
+      <a href="index.html#knowledge">Knowledge</a>
+      <a href="index.html#profile">Profile</a>
+      <a href="terms.html">Terms</a>
+      <a href="index.html#download" class="nav-cta">Download</a>
+    </div>
+  </nav>
+
+  <!-- PAGE CONTENT -->
+  <main class="page-wrapper">
+
+    <div class="page-header">
+      <div class="page-tag">// Privacy</div>
+      <h1>Privacy Policy</h1>
+      <p class="meta">Last updated: <span>March 2026</span> &nbsp;·&nbsp; Version <span>1.0</span></p>
+    </div>
+
+    <!-- Quick summary cards -->
+    <div class="summary-grid">
+      <div class="summary-card good">
+        <div class="icon">&#128274;</div>
+        <h4>No Data Collection</h4>
+        <p>We don't collect or store any personal data on our servers</p>
+      </div>
+      <div class="summary-card good">
+        <div class="icon">&#128241;</div>
+        <h4>Local Storage Only</h4>
+        <p>All your profile and settings stay on your device</p>
+      </div>
+      <div class="summary-card good">
+        <div class="icon">&#127760;</div>
+        <h4>No Account Required</h4>
+        <p>Use the full app without creating an account or signing in</p>
+      </div>
+      <div class="summary-card good">
+        <div class="icon">&#128293;</div>
+        <h4>No Tracking</h4>
+        <p>No analytics, ads, or behavioral tracking of any kind</p>
+      </div>
+    </div>
+
+    <div class="highlight-box">
+      <p>&#9989;&nbsp; <strong>Short version:</strong> SurvivalAI is built around a simple principle — your survival data belongs to you. Everything you enter (medical profile, settings, chat history) is stored only on your device. We have no server, no database, and no knowledge of who you are.</p>
+    </div>
+
+    <!-- 1 -->
+    <div class="doc-section">
+      <h2>01 — Introduction</h2>
+      <p>This Privacy Policy describes how SurvivalAI ("we", "our", "us") handles information when you use the SurvivalAI mobile application ("App") and this website ("Site"). We are committed to protecting your privacy and have designed SurvivalAI from the ground up to minimize data exposure.</p>
+      <p>This policy complies with applicable data protection regulations including the Personal Data Protection Act B.E. 2562 (PDPA) of Thailand and other applicable privacy laws.</p>
+    </div>
+
+    <hr class="divider">
+
+    <!-- 2 -->
+    <div class="doc-section">
+      <h2>02 — Data We Do NOT Collect</h2>
+      <p>To be explicit about our privacy-first approach, here is what we <strong>never</strong> collect:</p>
+      <ul>
+        <li>Your name, email address, phone number, or any identity information</li>
+        <li>Your location or GPS coordinates (these remain on-device only)</li>
+        <li>Your personal emergency profile (medical conditions, blood type, allergies, etc.)</li>
+        <li>Your chat history with the AI assistant</li>
+        <li>Camera or microphone recordings</li>
+        <li>Usage analytics, crash reports, or behavioral data</li>
+        <li>Device identifiers (IMEI, advertising ID, etc.)</li>
+        <li>BLE beacon broadcasts or the data contained within them</li>
+        <li>Cookies or tracking pixels (on the App; see website section below)</li>
+      </ul>
+    </div>
+
+    <hr class="divider">
+
+    <!-- 3 -->
+    <div class="doc-section">
+      <h2>03 — Data Stored on Your Device</h2>
+      <p>The following information is stored <strong>locally on your device only</strong> and is never transmitted to our servers:</p>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Data Type</th>
+            <th>Purpose</th>
+            <th>Storage</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Emergency Profile</td>
+            <td>Name, blood type, medical conditions, allergies, medications, emergency contacts — for BLE beacon and Morse transmission when you initiate it</td>
+            <td><span class="badge local">Local Only</span></td>
+          </tr>
+          <tr>
+            <td>App Settings</td>
+            <td>Theme, AI mode, voice preferences, sensitivity settings</td>
+            <td><span class="badge local">Local Only</span></td>
+          </tr>
+          <tr>
+            <td>Downloaded Manuals</td>
+            <td>Offline government survival documents you choose to download</td>
+            <td><span class="badge local">Local Only</span></td>
+          </tr>
+          <tr>
+            <td>Downloaded AI Model</td>
+            <td>Optional quantized LLM file (~2–4 GB) for offline chat</td>
+            <td><span class="badge local">Local Only</span></td>
+          </tr>
+          <tr>
+            <td>Chat History</td>
+            <td>Conversation history with the AI assistant (if enabled)</td>
+            <td><span class="badge local">Local Only</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>You can delete all locally stored data at any time by clearing the App's data in your device settings or by uninstalling the App.</p>
+    </div>
+
+    <hr class="divider">
+
+    <!-- 4 -->
+    <div class="doc-section">
+      <h2>04 — Third-Party Services</h2>
+      <p>SurvivalAI is primarily offline. However, certain optional features may interact with third-party services:</p>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Service</th>
+            <th>When Used</th>
+            <th>Data Sent</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>OpenAI API (ChatGPT)</td>
+            <td>Only when you select "Online AI" mode and have network access</td>
+            <td>Your chat message text. Subject to <a href="https://openai.com/privacy" style="color: var(--cyan);">OpenAI's Privacy Policy</a></td>
+          </tr>
+          <tr>
+            <td>Google Fonts</td>
+            <td>When loading the promotional website only (not the App)</td>
+            <td>Your IP address (standard web font loading)</td>
+          </tr>
+          <tr>
+            <td>App Store / Google Play</td>
+            <td>When downloading the App</td>
+            <td>Subject to Apple's / Google's respective privacy policies</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>The online AI feature is opt-in and clearly labeled in the App. When you use the offline knowledge base or on-device LLM mode, no data leaves your device. We recommend offline mode in sensitive situations.</p>
+    </div>
+
+    <hr class="divider">
+
+    <!-- 5 -->
+    <div class="doc-section">
+      <h2>05 — BLE Beacon (Seeking Mode)</h2>
+      <p>When you activate Seeking Mode, the App broadcasts a Bluetooth Low Energy (BLE) beacon signal. This is a one-way transmission — the App does not receive or store data from devices that detect the beacon.</p>
+      <p>The beacon may include:</p>
+      <ul>
+        <li>A unique service identifier for SurvivalAI rescue detection</li>
+        <li>Selected fields from your Emergency Profile (only fields you have filled in)</li>
+        <li>Your GPS coordinates (if location permission is granted)</li>
+      </ul>
+      <p>This information is transmitted wirelessly to nearby devices with compatible rescue scanning software. <strong>You control when this beacon is active</strong> — it only broadcasts when Seeking Mode is explicitly turned on. We have no access to these transmissions.</p>
+    </div>
+
+    <hr class="divider">
+
+    <!-- 6 -->
+    <div class="doc-section">
+      <h2>06 — Camera and Microphone</h2>
+      <p><strong>Camera:</strong> Used exclusively for real-time light detection in Morse code Read mode. The camera feed is processed in real time on your device. No images or video are captured, stored, or transmitted by SurvivalAI.</p>
+      <p><strong>Microphone:</strong> Used for voice-to-text input in the AI chat. Audio is converted to text on-device (using your device's built-in speech recognition) or through your chosen AI provider's API if you are using the online AI mode. SurvivalAI does not record, store, or transmit audio.</p>
+    </div>
+
+    <hr class="divider">
+
+    <!-- 7 -->
+    <div class="doc-section">
+      <h2>07 — This Website</h2>
+      <p>The SurvivalAI promotional website (this site) is a static HTML page hosted without analytics or tracking scripts. We do not use:</p>
+      <ul>
+        <li>Google Analytics or any analytics platform</li>
+        <li>Advertising pixels or retargeting scripts</li>
+        <li>Cookies beyond what browsers set automatically</li>
+        <li>Session tracking or fingerprinting</li>
+      </ul>
+      <p>The only third-party request made by this website is loading fonts from Google Fonts, which transmits your IP address to Google as part of the font delivery. You can block this in your browser's developer tools if desired.</p>
+    </div>
+
+    <hr class="divider">
+
+    <!-- 8 -->
+    <div class="doc-section">
+      <h2>08 — PDPA Compliance (Thailand)</h2>
+      <p>SurvivalAI is designed to be compliant with the Personal Data Protection Act B.E. 2562 (PDPA) of Thailand. Because we do not collect, process, or store personal data on any server, the data controller obligations under PDPA are significantly limited.</p>
+      <p>Key points:</p>
+      <ul>
+        <li>No consent is required for data we never collect</li>
+        <li>Data stored on your device is under your sole control</li>
+        <li>You may exercise your PDPA rights (access, erasure, portability) by clearing App data on your device</li>
+        <li>For online AI features, the relevant data controller is the AI provider (e.g., OpenAI); their privacy policy governs those interactions</li>
+      </ul>
+      <p>For more information about PDPA, visit the <a href="https://www.pdpa.gov.th/en/index" style="color: var(--cyan);">official PDPA website</a>.</p>
+    </div>
+
+    <hr class="divider">
+
+    <!-- 9 -->
+    <div class="doc-section">
+      <h2>09 — Children's Privacy</h2>
+      <p>SurvivalAI does not knowingly collect any information from children under 13 years of age. The App is designed for use by adults in emergency preparedness scenarios. If you are a parent or guardian and believe your child has provided personal information through the App's online features, please contact us so we can address it.</p>
+    </div>
+
+    <hr class="divider">
+
+    <!-- 10 -->
+    <div class="doc-section">
+      <h2>10 — Data Security</h2>
+      <p>Because data is stored locally on your device, the security of your information depends on your device's security (PIN, biometrics, encryption). We recommend:</p>
+      <ul>
+        <li>Using a strong PIN or biometric lock on your device</li>
+        <li>Enabling device encryption (standard on modern iOS and Android)</li>
+        <li>Being mindful of what you enter in your Emergency Profile, as it may be transmitted via BLE when Seeking Mode is active</li>
+      </ul>
+    </div>
+
+    <hr class="divider">
+
+    <!-- 11 -->
+    <div class="doc-section">
+      <h2>11 — Your Rights</h2>
+      <p>You have full control over your data:</p>
+      <ul>
+        <li><strong>Access:</strong> All your data is visible within the App itself</li>
+        <li><strong>Correction:</strong> Edit any profile field at any time within the App</li>
+        <li><strong>Deletion:</strong> Clear all data by uninstalling the App or clearing its storage in device settings</li>
+        <li><strong>Portability:</strong> Your profile data is stored in standard device storage and can be accessed via device backup tools</li>
+        <li><strong>Withdraw consent:</strong> Revoke camera, microphone, location, or Bluetooth permissions at any time through your device's system settings</li>
+      </ul>
+    </div>
+
+    <hr class="divider">
+
+    <!-- 12 -->
+    <div class="doc-section">
+      <h2>12 — Changes to This Policy</h2>
+      <p>We may update this Privacy Policy from time to time. When we do, we will update the "Last updated" date at the top of this page. We encourage you to review this policy periodically. For significant changes, we will include a notice in the App on next launch.</p>
+    </div>
+
+    <hr class="divider">
+
+    <!-- 13 -->
+    <div class="doc-section">
+      <h2>13 — Contact</h2>
+      <p>If you have questions, concerns, or requests related to your privacy, please open an issue on the project's public repository or reach out through the official SurvivalAI website. We take privacy concerns seriously and will respond promptly.</p>
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="terms.html">Terms of Service</a>
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="index.html#download">Download</a>
+    </div>
+    <p>&copy; 2026 SurvivalAI. Built for humanity. Open source.</p>
+    <div class="morse">... ..- .-. ...- .. ...- .- .-.. .- ..</div>
+    <p style="margin-top: 0.5rem; font-size: 12px; color: var(--text-dim);">"SURVIVALAI" in Morse Code</p>
+  </footer>
+
+</body>
+</html>

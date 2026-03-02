@@ -1,0 +1,57 @@
+{
+  "expo": {
+    "name": "SurvivalAI",
+    "slug": "survival-ai",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "scheme": "survivalai",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0A0E17"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.survivalai.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Camera is used to read Morse code light signals",
+        "NSMicrophoneUsageDescription": "Microphone is used for voice commands",
+        "NSSpeechRecognitionUsageDescription": "Speech recognition is used for voice input",
+        "NSLocationWhenInUseUsageDescription": "Location is used to share coordinates in Seeking mode",
+        "NSBluetoothAlwaysUsageDescription": "Bluetooth is used to broadcast rescue beacon in Seeking mode"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png",
+        "backgroundColor": "#0A0E17"
+      },
+      "package": "com.survivalai.app",
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "BLUETOOTH",
+        "BLUETOOTH_ADMIN",
+        "BLUETOOTH_CONNECT",
+        "BLUETOOTH_ADVERTISE",
+        "FLASHLIGHT"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-camera",
+      "expo-location",
+      "llama.rn"
+    ]
+  }
+}

@@ -1,0 +1,496 @@
+{
+  "water": [
+    {
+      "q": "How do I purify water by boiling?",
+      "a": "Bring water to a rolling boil for at least one minute, or three minutes at elevations above 6,500 feet (2,000 meters). Boiling kills bacteria, viruses, and parasites but does not remove chemical contaminants. Let the water cool before drinking, and store it in a clean container to prevent recontamination.",
+      "tags": ["boiling", "purification", "bacteria", "safe water", "drinking water"]
+    },
+    {
+      "q": "How do I use chemical treatment to purify water?",
+      "a": "Add 2 drops of unscented household bleach (6-8% sodium hypochlorite) per liter of clear water, or 4 drops if the water is cloudy. Stir and let it stand for 30 minutes before drinking; you should detect a slight chlorine smell. Iodine tablets are another option: follow the package directions, typically one tablet per liter with a 30-minute wait time.",
+      "tags": ["chemical", "bleach", "iodine", "purification", "chlorine", "tablets"]
+    },
+    {
+      "q": "How do I build a solar water disinfection (SODIS) setup?",
+      "a": "Fill a clear PET plastic bottle with water and lay it on a reflective surface such as corrugated metal in direct sunlight for at least 6 hours, or 2 full days if the sky is overcast. UV-A radiation and heat work together to kill pathogens. This method is most effective with clear water; pre-filter cloudy water through cloth first.",
+      "tags": ["solar", "SODIS", "UV", "sunlight", "purification", "plastic bottle"]
+    },
+    {
+      "q": "How do I collect rainwater for drinking?",
+      "a": "Spread a tarp, poncho, or any clean non-toxic sheet material to funnel rainwater into a container. Let the first few minutes of rain wash dust and contaminants off the collection surface before you begin collecting. Rainwater is generally safe to drink without treatment if collected cleanly, but filtering or boiling adds an extra margin of safety.",
+      "tags": ["rain", "collection", "tarp", "rainwater", "harvesting"]
+    },
+    {
+      "q": "How do I build a solar still to collect water?",
+      "a": "Dig a hole about 3 feet wide and 2 feet deep, place a collection container in the center, and cover the hole with a clear plastic sheet sealed around the edges with dirt or rocks. Place a small stone in the center of the sheet so it sags toward the container. Evaporation from the soil condenses on the plastic and drips into the container, yielding roughly 0.5-1 liter per day.",
+      "tags": ["solar still", "distillation", "evaporation", "desert", "collection", "condensation"]
+    },
+    {
+      "q": "How do I make a DIY water filter?",
+      "a": "Layer materials inside a cut plastic bottle from bottom to top: gravel, coarse sand, fine sand, and crushed charcoal from a hardwood fire. Pour water through the top and collect it from the bottom opening. This filter removes sediment and many contaminants, but you should still boil or chemically treat the filtered water to kill pathogens.",
+      "tags": ["filter", "DIY", "charcoal", "sand", "improvised", "filtration"]
+    },
+    {
+      "q": "What are the signs of dehydration and how much water do I need?",
+      "a": "Early signs include dark urine, dry mouth, headache, dizziness, and fatigue; severe dehydration causes confusion, rapid heartbeat, and loss of consciousness. An adult needs a minimum of 2 liters of water per day at rest, and up to 4 or more liters in hot conditions or with physical exertion. Ration water by drinking small sips frequently rather than large amounts at once.",
+      "tags": ["dehydration", "symptoms", "rationing", "minimum", "daily needs", "thirst"]
+    },
+    {
+      "q": "How do I collect water using a transpiration bag?",
+      "a": "Tie a clear plastic bag around a leafy branch of a non-poisonous tree or shrub, ensuring the opening is sealed tightly. Place a small rock inside the bag at the lowest point to create a collection spot. The plant transpires moisture that condenses inside the bag, yielding approximately 0.25-0.5 liters over the course of a sunny day.",
+      "tags": ["transpiration", "bag", "plants", "trees", "collection", "condensation"]
+    }
+  ],
+  "food": [
+    {
+      "q": "What are the basic rules for identifying edible wild plants?",
+      "a": "Never eat a plant you cannot positively identify; when in doubt, leave it out. Avoid plants with milky sap, thorns, umbrella-shaped flower clusters, or beans/seeds inside pods, as many of these are toxic. Use the Universal Edibility Test as a last resort: test a small piece on your skin, then lips, then tongue over 8+ hours before consuming a small amount.",
+      "tags": ["edible plants", "identification", "poisonous", "foraging", "universal edibility test"]
+    },
+    {
+      "q": "How do I preserve food by smoking?",
+      "a": "Cut meat into thin strips no thicker than 1/4 inch and hang them on a rack 2-3 feet above a low, smoky fire using green hardwood like oak or hickory. Maintain smoke for 6-12 hours until the meat is dry and dark throughout; it should bend without snapping. Smoked meat can last weeks at room temperature if kept dry and away from insects.",
+      "tags": ["smoking", "preservation", "meat", "jerky", "drying", "hardwood"]
+    },
+    {
+      "q": "How do I preserve food by salting?",
+      "a": "Coat meat or fish thoroughly with a thick layer of salt on all surfaces, using roughly one part salt to five parts meat by weight. Stack the salted pieces in layers and store them in a cool, dry place; drain off any liquid that accumulates. Properly salt-cured meat can last for months without refrigeration.",
+      "tags": ["salting", "curing", "preservation", "meat", "fish", "salt"]
+    },
+    {
+      "q": "How many calories do I need to survive and how should I ration food?",
+      "a": "An average adult needs about 2,000 calories per day, but can survive on 800-1,200 calories for extended periods if activity is minimized. Prioritize calorie-dense foods like nuts, fats, and dried meats when rationing. Eat small portions throughout the day rather than one large meal to maintain energy levels and reduce stomach cramps.",
+      "tags": ["calories", "rationing", "energy", "nutrition", "minimum", "survival diet"]
+    },
+    {
+      "q": "How do I cook food without pots or utensils?",
+      "a": "Wrap food in large non-toxic leaves or clay and place it directly on hot coals or bury it in an ember pit to cook. You can also skewer meat or fish on a green stick and roast it over an open flame, or heat flat rocks to use as a cooking surface. Avoid using rocks from riverbeds as they may contain moisture and can explode when heated.",
+      "tags": ["cooking", "primitive", "no utensils", "campfire", "coals", "roasting", "improvised"]
+    },
+    {
+      "q": "What are the basics of trapping and snaring small game?",
+      "a": "Simple snare traps use a noose of wire or strong cordage placed along animal trails at the height of the target animal's head. Look for tracks, droppings, and worn paths to identify active runs, and set multiple snares to increase your odds. Check traps at least twice daily to prevent the catch from being taken by predators or spoiling.",
+      "tags": ["trapping", "snare", "hunting", "small game", "wire", "animal trails"]
+    },
+    {
+      "q": "What are the basics of survival fishing?",
+      "a": "Improvise hooks from safety pins, thorns, bone, or bent wire, and use insects, worms, or small pieces of meat as bait. Fish are most active at dawn and dusk, and tend to gather near cover such as submerged logs, rocks, and overhanging banks. You can also build a simple fish trap by weaving a funnel-shaped basket from branches and placing it in a stream with the opening facing upstream.",
+      "tags": ["fishing", "hooks", "bait", "improvised", "fish trap", "stream"]
+    },
+    {
+      "q": "Is it safe to eat insects for survival?",
+      "a": "Many insects are edible, high in protein, and easy to catch; good options include crickets, grasshoppers, ants, and grubs. Avoid brightly colored insects, hairy caterpillars, and any that have a strong odor, as these often indicate toxicity. Cook insects before eating by roasting them on a hot rock or over a fire to kill parasites and improve taste.",
+      "tags": ["insects", "entomophagy", "protein", "grubs", "crickets", "edible bugs"]
+    }
+  ],
+  "first_aid": [
+    {
+      "q": "How do I treat a bleeding wound in the field?",
+      "a": "Apply firm, direct pressure to the wound using the cleanest cloth available and maintain pressure for at least 10-15 minutes without lifting to check. If blood soaks through, add more material on top without removing the first layer. Elevate the injured area above the heart if possible, and once bleeding stops, bandage the wound firmly but not so tight that it cuts off circulation.",
+      "tags": ["bleeding", "wound", "pressure", "bandage", "hemorrhage", "wound care"]
+    },
+    {
+      "q": "How do I treat burns without medical supplies?",
+      "a": "Cool the burn immediately with clean, cool running water for at least 10-20 minutes; do not use ice, butter, or toothpaste. Cover the burn loosely with a clean, non-stick dressing to protect it from infection. Do not pop blisters, as they serve as a natural barrier against infection. Severe burns covering large areas or affecting the face, hands, or joints require professional medical attention as soon as possible.",
+      "tags": ["burns", "cooling", "blister", "first aid", "thermal injury", "dressing"]
+    },
+    {
+      "q": "How do I splint a suspected fracture?",
+      "a": "Immobilize the joint above and below the suspected fracture using rigid materials such as straight sticks, rolled magazines, or cardboard, padded with cloth. Tie the splint in place with strips of fabric, belts, or cordage, ensuring it is snug but not cutting off blood flow. Check fingers or toes below the splint for numbness, tingling, or color change, which indicate the splint is too tight.",
+      "tags": ["fracture", "splint", "broken bone", "immobilize", "first aid", "joints"]
+    },
+    {
+      "q": "How do I perform CPR on an adult?",
+      "a": "Place the heel of one hand on the center of the chest between the nipples, interlock your other hand on top, and compress the chest at least 2 inches deep at a rate of 100-120 compressions per minute. After every 30 compressions, tilt the head back, lift the chin, and give 2 rescue breaths, each lasting about 1 second. Continue the cycle of 30 compressions and 2 breaths until the person revives, help arrives, or you are physically unable to continue.",
+      "tags": ["CPR", "cardiac", "chest compressions", "rescue breathing", "resuscitation", "heart"]
+    },
+    {
+      "q": "How do I recognize and treat shock?",
+      "a": "Signs of shock include pale or clammy skin, rapid shallow breathing, weak rapid pulse, confusion, and nausea. Lay the person flat on their back and elevate their legs about 12 inches unless a spinal injury is suspected. Keep them warm with blankets or extra clothing, do not give food or water, and reassure them calmly while seeking medical help.",
+      "tags": ["shock", "circulation", "blood pressure", "pale", "treatment", "emergency"]
+    },
+    {
+      "q": "How do I treat hypothermia?",
+      "a": "Move the person to shelter, remove any wet clothing, and insulate them from the ground. Warm them gradually using body heat, warm blankets, or warm (not hot) water bottles placed on the chest, neck, and groin areas. Do not rub the extremities, give alcohol, or apply direct heat, as these can cause dangerous cardiac arrhythmias in a severely hypothermic person.",
+      "tags": ["hypothermia", "cold", "warming", "body temperature", "exposure", "frostbite"]
+    },
+    {
+      "q": "When and how should I apply a tourniquet?",
+      "a": "Apply a tourniquet only for life-threatening limb bleeding that cannot be controlled by direct pressure, placing it 2-3 inches above the wound but not over a joint. Use a wide band at least 1.5 inches wide, tighten it by twisting a windlass until the bleeding stops, and secure it in place. Note the time of application and do not remove it; the person needs professional medical care within 2 hours to save the limb.",
+      "tags": ["tourniquet", "hemorrhage", "arterial bleeding", "limb", "emergency", "windlass"]
+    },
+    {
+      "q": "How do I treat a snake bite in the field?",
+      "a": "Keep the victim calm and still to slow the spread of venom, and immobilize the bitten limb at or below heart level. Remove jewelry or tight clothing near the bite before swelling starts, and clean the wound gently with soap and water. Do not cut the wound, attempt to suck out venom, apply ice, or use a tourniquet; transport the victim to medical care as quickly as possible and try to remember the snake's appearance.",
+      "tags": ["snake bite", "venom", "envenomation", "immobilize", "first aid", "reptile"]
+    },
+    {
+      "q": "How do I prevent wound infection without medical supplies?",
+      "a": "Clean the wound thoroughly with clean water, removing all visible debris and dirt by irrigating with gentle pressure. Apply a thin layer of raw honey if available, as it has natural antibacterial properties, and cover with the cleanest material you have. Change the dressing at least once daily, watch for signs of infection such as increasing redness, warmth, swelling, or pus, and keep the wound dry between cleanings.",
+      "tags": ["infection", "wound care", "cleaning", "antibacterial", "honey", "dressing", "prevention"]
+    }
+  ],
+  "shelter": [
+    {
+      "q": "How do I build a debris hut shelter?",
+      "a": "Place a long ridgepole (about 9-12 feet) with one end on the ground and the other propped up about 3 feet high on a tree stump or forked branch. Lean shorter sticks along both sides of the ridgepole to create a ribbed frame, then pile leaves, pine needles, and other forest debris at least 2-3 feet thick over the entire structure. The entrance should be just large enough to crawl through, and the inside should be barely wider than your body to maximize heat retention.",
+      "tags": ["debris hut", "shelter", "insulation", "leaves", "ridgepole", "wilderness"]
+    },
+    {
+      "q": "How do I build a lean-to shelter?",
+      "a": "Lash a horizontal support pole between two trees at about waist height, then lean branches at a 45-degree angle against it to form a sloped wall. Cover the angled wall with layers of leaves, bark, boughs, or a tarp, working from the bottom up so each layer overlaps like shingles. Position the open side away from the prevailing wind, and build a reflector fire about 4 feet in front of the opening to radiate heat into the shelter.",
+      "tags": ["lean-to", "shelter", "branches", "tarp", "wind protection", "reflector fire"]
+    },
+    {
+      "q": "How do I build a snow shelter or quinzhee?",
+      "a": "Pile snow into a large mound at least 6-8 feet high and let it settle and sinter for 1-2 hours. Hollow out the inside leaving walls about 12-18 inches thick, and carve the sleeping platform higher than the entrance so cold air sinks below you. Poke a ventilation hole through the roof with a stick to prevent carbon dioxide buildup, and mark the outside so rescuers know you are inside.",
+      "tags": ["snow shelter", "quinzhee", "igloo", "winter", "snow cave", "cold weather"]
+    },
+    {
+      "q": "How do I choose a good shelter location?",
+      "a": "Select a spot that is elevated and well-drained to avoid flooding, away from dead trees or loose rocks that could fall, and protected from prevailing winds. Avoid dry riverbeds, valley bottoms prone to cold air pooling, and areas near stagnant water with heavy insect activity. Proximity to building materials, water, and firewood is ideal, but prioritize safety from natural hazards above convenience.",
+      "tags": ["location", "site selection", "elevation", "drainage", "safety", "campsite"]
+    },
+    {
+      "q": "How do I insulate myself from the ground?",
+      "a": "The ground will draw heat from your body 25 times faster than air, so insulation beneath you is more important than insulation above you. Create a thick sleeping pad from dry leaves, pine needles, grass, or boughs at least 4-6 inches deep and compress it as little as possible. In an urban setting, use cardboard, newspaper, foam, or any material that creates an air barrier between your body and the ground.",
+      "tags": ["insulation", "ground", "sleeping pad", "heat loss", "conduction", "warmth"]
+    },
+    {
+      "q": "How do I find or create shelter in an urban environment?",
+      "a": "Look for intact structures such as parking garages, basements, stairwells, and interior rooms that provide protection from weather and visibility. Avoid buildings with structural damage, broken glass, or signs of gas leaks. Block doorways and windows with available materials to insulate and secure your space, and choose an upper floor if flooding is a concern or a lower floor for warmth and stability.",
+      "tags": ["urban", "city", "building", "shelter", "basement", "disaster", "indoor"]
+    },
+    {
+      "q": "How do I waterproof a shelter?",
+      "a": "Layer coverings from the bottom up so each layer overlaps the one below, just like roof shingles, to shed water away from the interior. Large leaves, bark slabs, plastic sheeting, or trash bags work well as waterproofing layers over a structural frame. Angle the roof steeply (at least 45 degrees) so rain runs off quickly, and dig a shallow drainage trench around the shelter perimeter to divert water flow.",
+      "tags": ["waterproof", "rain", "tarp", "plastic", "drainage", "shingles", "roof"]
+    },
+    {
+      "q": "How do I conserve body heat in a survival shelter?",
+      "a": "Make the shelter interior as small as possible so your body heat warms the space efficiently, and block the entrance with a backpack, debris, or a door flap. Wear a hat and insulate your neck and wrists, as these are major areas of heat loss. Huddle with other survivors if available, and eat calorie-dense food before sleep since digestion generates internal warmth.",
+      "tags": ["body heat", "warmth", "conservation", "small space", "insulation", "cold"]
+    }
+  ],
+  "fire": [
+    {
+      "q": "How do I start a fire using the bow drill friction method?",
+      "a": "Carve a fireboard and spindle from the same dry softwood (such as willow, cottonwood, or cedar), cut a V-shaped notch in the fireboard, and use a bow made from a curved stick and cordage to spin the spindle rapidly. The friction creates a hot ember in the notch that falls onto a tinder bundle; gently blow on the ember until the tinder ignites. This method requires practice, completely dry wood, and proper technique to generate enough heat.",
+      "tags": ["bow drill", "friction", "primitive", "fire starting", "spindle", "fireboard"]
+    },
+    {
+      "q": "How do I start a fire with flint and steel?",
+      "a": "Strike a piece of high-carbon steel against a sharp edge of flint, quartz, or similar hard rock at a steep angle to produce sparks. Direct the sparks downward onto a char cloth or very fine tinder bundle such as dried fungus or shredded birch bark. Once the tinder catches a spark and begins to glow, transfer it to a larger tinder bundle and blow gently until flames appear.",
+      "tags": ["flint", "steel", "sparks", "char cloth", "fire starting", "striker"]
+    },
+    {
+      "q": "How do I start a fire in wet conditions?",
+      "a": "Look for dry material inside dead standing trees, under rock overhangs, or by splitting wet wood open to access the dry interior. Feather sticks (thin curls shaved from dry inner wood) catch fire much more easily than solid pieces. Build a platform of green logs or rocks to elevate your fire off the wet ground, and start with an abundance of small, dry tinder before gradually adding larger fuel.",
+      "tags": ["wet conditions", "rain", "damp", "feather stick", "fire starting", "dry wood"]
+    },
+    {
+      "q": "What are good natural sources of tinder and kindling?",
+      "a": "Excellent tinder materials include dried grass, birch bark, cedar bark shredded into fine fibers, cattail fluff, dryer lint, pine resin, and dry fungus such as chaga. For kindling, use pencil-thin dead twigs snapped from standing dead trees (not from the wet ground), split softwood sticks, or fatwood from the resinous heartwood of dead pine trees. Always collect more tinder and kindling than you think you need before attempting to start a fire.",
+      "tags": ["tinder", "kindling", "birch bark", "fatwood", "pine resin", "cattail", "fire materials"]
+    },
+    {
+      "q": "What are the different types of fire lays and when do I use each?",
+      "a": "A teepee fire lay lights quickly and produces a tall flame, making it ideal for boiling water and signaling. A log cabin lay (stacked in alternating layers) creates a stable bed of coals excellent for cooking. A long fire (two parallel logs with fire between them) is best for warming a person lying beside it, and a star fire (logs radiating from a central point pushed inward as they burn) conserves fuel through the night.",
+      "tags": ["teepee", "log cabin", "star fire", "fire lay", "cooking fire", "signal fire", "campfire"]
+    },
+    {
+      "q": "How do I build a signal fire?",
+      "a": "Build a large teepee fire lay in an open, visible area such as a hilltop or clearing, and prepare it in advance so it can be lit quickly when rescuers are spotted. Once burning well, add green leaves, fresh pine boughs, or damp grass to produce thick white smoke visible from miles away. At night, a bright fire itself serves as the signal; maintain three fires in a triangle formation, which is an internationally recognized distress signal.",
+      "tags": ["signal fire", "rescue", "smoke", "visibility", "distress", "triangle"]
+    },
+    {
+      "q": "What are critical fire safety rules in a survival situation?",
+      "a": "Clear a circle at least 10 feet in diameter down to bare mineral soil before starting a fire, and never build one under overhanging branches or near dry vegetation. Always have water, dirt, or sand nearby to extinguish the fire, and never leave it unattended. In a shelter, ensure proper ventilation to prevent carbon monoxide poisoning, and position your fire so wind does not blow sparks toward your sleeping area.",
+      "tags": ["fire safety", "wildfire", "ventilation", "carbon monoxide", "prevention", "clearing"]
+    },
+    {
+      "q": "How do I carry and preserve fire?",
+      "a": "Create a fire bundle by wrapping a glowing coal or slow-burning punk wood in green leaves or bark, then placing it inside a larger bundle of dry tinder for insulation. A thick piece of smoldering fungus or a tightly rolled bark torch can carry an ember for hours during travel. Alternatively, keep a slow-burning fire going by banking it with ash and adding a large green log on top, which will smolder and preserve coals for 8-12 hours.",
+      "tags": ["carrying fire", "ember", "fire preservation", "punk wood", "banking", "coal"]
+    }
+  ],
+  "navigation": [
+    {
+      "q": "How do I find direction using the sun?",
+      "a": "The sun rises in the general east and sets in the general west, reaching its highest point due south in the Northern Hemisphere (due north in the Southern Hemisphere) at solar noon. The stick shadow method works more precisely: place a stick upright in the ground, mark the tip of its shadow, wait 15-30 minutes, and mark the new shadow tip; a line between the two marks runs roughly east-west, with the first mark being west. This works in any hemisphere.",
+      "tags": ["sun", "direction", "shadow", "east", "west", "solar", "stick method"]
+    },
+    {
+      "q": "How do I navigate using the stars at night?",
+      "a": "In the Northern Hemisphere, locate the Big Dipper and follow the two pointer stars at the edge of its bowl upward to Polaris, the North Star, which indicates true north within about one degree. In the Southern Hemisphere, find the Southern Cross constellation and extend its long axis 4.5 times its length toward the horizon to approximate due south. Stars near the horizon move, so use the pole star or celestial pole for the most reliable direction finding.",
+      "tags": ["stars", "Polaris", "North Star", "Big Dipper", "Southern Cross", "celestial", "night navigation"]
+    },
+    {
+      "q": "How do I use a compass properly?",
+      "a": "Hold the compass flat and level, let the needle settle, and the red end of the needle points toward magnetic north. To follow a bearing, rotate the compass housing until your desired degree heading aligns with the direction-of-travel arrow, then turn your body until the magnetic needle sits inside the orienting arrow (red in the shed). Be aware of magnetic declination, the difference between magnetic north and true north, which varies by location and can be significant.",
+      "tags": ["compass", "bearing", "magnetic north", "declination", "navigation", "heading"]
+    },
+    {
+      "q": "What natural navigation markers can I use to find direction?",
+      "a": "Moss tends to grow more thickly on the north side of trees in the Northern Hemisphere due to less sun exposure, though this is unreliable as a sole indicator. Spider webs are often built on the south side of trees where insects are more active in warmer air. Prevailing wind patterns, snow melt patterns (faster on sun-facing slopes), and the orientation of satellite dishes (pointing south in the Northern Hemisphere) can all provide directional clues when used together.",
+      "tags": ["natural markers", "moss", "trees", "wind", "snow melt", "direction"]
+    },
+    {
+      "q": "How do I read a topographic map?",
+      "a": "Contour lines connect points of equal elevation; lines close together indicate steep terrain and lines far apart indicate flat ground. Orient the map by aligning its north arrow with compass north (accounting for declination) and identify at least two visible landmarks to triangulate your position. Water flows perpendicular to contour lines and downhill, so V-shaped contours pointing uphill indicate valleys or stream drainages.",
+      "tags": ["topographic", "map", "contour lines", "elevation", "terrain", "map reading"]
+    },
+    {
+      "q": "How do I find north using an analog watch?",
+      "a": "In the Northern Hemisphere, point the hour hand at the sun, then find the midpoint between the hour hand and 12 o'clock; that midpoint indicates south. In the Southern Hemisphere, point the 12 o'clock mark at the sun, and the midpoint between it and the hour hand points north. This method is approximate and works best during midday hours; adjust for daylight saving time by using the 1 o'clock position instead of 12.",
+      "tags": ["watch", "analog", "sun", "north", "south", "time", "direction finding"]
+    },
+    {
+      "q": "How do I use terrain association for navigation?",
+      "a": "Match visible terrain features like ridgelines, valleys, rivers, and hilltops to corresponding features on your map to track your position as you travel. Use handrails (linear features like rivers, roads, or ridgelines that run parallel to your route) to guide movement, and use backstops (features perpendicular to your route) to know when you have gone too far. Counting paces helps estimate distance: for most adults, about 60-70 double steps equal 100 meters on flat ground.",
+      "tags": ["terrain", "features", "handrail", "backstop", "pace count", "land navigation"]
+    }
+  ],
+  "signaling": [
+    {
+      "q": "How do I use a mirror for signaling?",
+      "a": "Hold the mirror near your face and reflect sunlight toward the target aircraft or rescuer by sighting along your outstretched arm with a V-sign or through the sighting hole if the mirror has one. Sweep the reflected flash slowly back and forth across the target's position to maximize the chance of being seen. A signal mirror flash can be seen up to 50 miles away on a clear day and is one of the most effective daytime signaling methods.",
+      "tags": ["mirror", "signal mirror", "reflection", "sunlight", "aircraft", "rescue"]
+    },
+    {
+      "q": "How do I create effective smoke signals?",
+      "a": "Build a hot base fire and then add green branches, wet leaves, or damp grass to produce thick smoke that contrasts with the sky. White smoke (from green vegetation) stands out best against dark backgrounds, while dark smoke (from burning rubber, oil, or plastic) is more visible against light skies or snow. Three columns of smoke in a line or triangle is an internationally recognized distress signal.",
+      "tags": ["smoke", "signal fire", "rescue", "visibility", "distress", "green branches"]
+    },
+    {
+      "q": "What are the standard ground-to-air emergency signals?",
+      "a": "Create symbols at least 10 feet tall in open areas using contrasting materials such as rocks, logs, or trampled vegetation against the ground. The key ICAO ground-to-air symbols are: V means 'require assistance,' X means 'require medical help,' N means 'no or negative,' Y means 'yes or affirmative,' and an arrow indicates 'traveling in this direction.' Make symbols as large and high-contrast as possible to be visible from altitude.",
+      "tags": ["ground to air", "symbols", "V", "X", "ICAO", "rescue", "aircraft"]
+    },
+    {
+      "q": "How do I signal SOS?",
+      "a": "SOS in Morse code is three short signals, three long signals, three short signals (... --- ...) and can be transmitted by flashlight, whistle, mirror, or any means of producing distinct short and long bursts. Pause briefly between each group of three. This is universally recognized regardless of language and should be repeated continuously until help arrives or you receive a response.",
+      "tags": ["SOS", "Morse code", "distress", "emergency", "signal", "flashlight", "whistle"]
+    },
+    {
+      "q": "How do I use whistle signals for communication?",
+      "a": "Three short blasts on a whistle is the universal distress signal and should be repeated at regular intervals. One blast means 'where are you' or 'attention,' two blasts means 'come to me' or 'all clear,' and three blasts means 'help' or 'emergency.' A whistle carries much farther than the human voice, does not cause voice fatigue, and works in conditions where visual signals fail such as fog or dense forest.",
+      "tags": ["whistle", "blasts", "distress", "communication", "audio", "signal"]
+    },
+    {
+      "q": "What are the international distress signals I should know?",
+      "a": "Key distress signals include: three fires in a triangle, SOS in any form, a square with a circle (or ball) above it (flag hoist), raising and lowering outstretched arms repeatedly, continuous sounding of a horn or whistle, orange smoke flares, and the radio call 'Mayday Mayday Mayday.' Flying a flag or cloth upside down, or tying a knot in a flag, are also recognized distress indicators in many regions.",
+      "tags": ["international", "distress", "Mayday", "flare", "flag", "emergency", "universal"]
+    },
+    {
+      "q": "How do I use a flashlight or torch for signaling at night?",
+      "a": "Point the flashlight directly at the target and use your hand or a cover to create distinct flashes, using three quick flashes for distress or SOS pattern for emergencies. Sweep the beam slowly across the horizon if you do not know the rescuer's exact location. At night, a bright flashlight is visible for several miles, and placing it behind a clear water bottle creates a diffused lantern effect visible from all directions.",
+      "tags": ["flashlight", "night", "signal", "light", "torch", "SOS", "visibility"]
+    }
+  ],
+  "nuclear": [
+    {
+      "q": "What are the basics of radiation and its dangers?",
+      "a": "There are three main types of ionizing radiation: alpha (blocked by skin or paper), beta (blocked by clothing or thin metal), and gamma (requires thick lead, concrete, or earth to block). Radiation exposure is measured in sieverts; doses above 1 sievert cause radiation sickness, and doses above 4-5 sieverts are usually fatal without medical treatment. The three protective principles are time (minimize exposure duration), distance (radiation intensity drops with the square of distance), and shielding (place dense material between you and the source).",
+      "tags": ["radiation", "alpha", "beta", "gamma", "sievert", "exposure", "ionizing"]
+    },
+    {
+      "q": "How do I create a fallout shelter?",
+      "a": "Seek shelter in the interior rooms of a multi-story concrete or brick building, ideally in the basement or center of the structure away from exterior walls, roofs, and windows. The more mass between you and the fallout particles outside, the better your protection; concrete, earth, and packed books all serve as effective shielding. Plan to stay sheltered for at least 48-72 hours, as radiation levels from fallout decrease by roughly 90% within the first 7 hours after detonation and continue declining rapidly.",
+      "tags": ["fallout shelter", "basement", "shielding", "concrete", "protection", "nuclear"]
+    },
+    {
+      "q": "How do I decontaminate after radiation exposure?",
+      "a": "Remove and bag all outer clothing, which eliminates up to 90% of external contamination; do this outside your shelter and leave the clothing outside. Shower or wash thoroughly with soap and warm water, scrubbing gently without breaking the skin, paying special attention to hair and skin folds. Do not use conditioner as it can bind radioactive particles to hair; if no water is available, brush or wipe exposed skin and hair vigorously with a dry cloth.",
+      "tags": ["decontamination", "contamination", "washing", "clothing", "radioactive", "shower"]
+    },
+    {
+      "q": "How do I ensure food and water are safe after a nuclear event?",
+      "a": "Sealed containers of food and bottled water that were indoors during the event are safe to consume after you wipe the outside of the containers with a damp cloth. Do not eat or drink anything that was exposed to fallout outdoors; if you must use outdoor water, take it from deep underground sources or covered wells. Tap water from covered reservoirs is generally safe if the system was sealed, but running streams and standing pools should be avoided for at least two weeks.",
+      "tags": ["food safety", "water safety", "fallout", "contamination", "sealed", "nuclear"]
+    },
+    {
+      "q": "What is the distance/shielding/time principle?",
+      "a": "Distance: doubling your distance from a radiation source reduces your exposure by roughly 75%, so move as far away as possible from contaminated areas. Shielding: place the densest available material between yourself and the source; 10 inches of water, 4 inches of concrete, 2 inches of packed earth, or 1 inch of lead all halve the gamma radiation reaching you. Time: minimize the total time you spend exposed; quick excursions out of shelter for necessities should be planned and executed rapidly.",
+      "tags": ["distance", "shielding", "time", "radiation protection", "principles", "exposure"]
+    },
+    {
+      "q": "What are potassium iodide tablets and how do I use them?",
+      "a": "Potassium iodide (KI) tablets saturate your thyroid gland with stable iodine, preventing it from absorbing radioactive iodine-131 released during a nuclear event. Adults take 130 mg, children age 3-18 take 65 mg, and children under 3 take 32 mg, ideally before or as soon as possible after exposure to radioactive iodine. KI only protects the thyroid and does not provide protection against other types of radiation or radioactive isotopes; it is most effective when taken within 4 hours of exposure.",
+      "tags": ["potassium iodide", "KI", "thyroid", "iodine", "tablets", "nuclear", "radioactive iodine"]
+    },
+    {
+      "q": "What should I do immediately after a nuclear detonation?",
+      "a": "If you see a flash, do not look at it; immediately drop to the ground face-down and cover exposed skin, then wait at least 30 seconds for the shockwave and debris to pass. Move to the nearest substantial building within 15 minutes if you are outdoors, heading toward the interior or basement. Close and seal all windows, doors, and vents with plastic sheeting and duct tape if available, and turn off ventilation systems to prevent fallout particles from entering.",
+      "tags": ["nuclear detonation", "blast", "immediate response", "shelter", "flash", "shockwave"]
+    },
+    {
+      "q": "How long should I stay sheltered after a nuclear event?",
+      "a": "The general guideline is to remain sheltered for a minimum of 24 hours, with 48-72 hours being strongly recommended, as fallout radiation drops to about 1% of its initial level after 48 hours (the 7-10 rule: for every sevenfold increase in time, radiation drops by a factor of ten). Listen for official guidance on radio or emergency broadcast channels if available. When you do need to go outside, limit trips to 30 minutes or less and re-decontaminate upon return.",
+      "tags": ["shelter duration", "fallout decay", "7-10 rule", "stay inside", "radiation decay", "nuclear"]
+    }
+  ],
+  "chemical": [
+    {
+      "q": "How do I recognize signs of a chemical attack?",
+      "a": "Warning signs include unexplained dead or dying animals and birds, unusual odors (bitter almonds, fresh-cut hay, garlic, or fruity smells), low-lying clouds or mist that are out of place, and widespread unexplained illness among people. Symptoms in exposed people may include difficulty breathing, tearing eyes, nausea, skin blistering, or sudden collapse. If you notice these signs, immediately move upwind and uphill from the suspected area.",
+      "tags": ["chemical attack", "signs", "symptoms", "detection", "gas", "nerve agent"]
+    },
+    {
+      "q": "How do I improvise a gas mask or respiratory protection?",
+      "a": "In an emergency, soak a cloth, bandana, or T-shirt in water (or a baking soda solution of 1 tablespoon per cup) and breathe through it to filter out some particulates and water-soluble chemicals. For better protection, layer activated charcoal (from a water filter or fire) between two pieces of cloth secured over your nose and mouth with a rubber band or string. These improvised methods provide very limited protection and should only be used long enough to escape the contaminated area.",
+      "tags": ["gas mask", "improvised", "respiratory", "protection", "charcoal", "filter", "breathing"]
+    },
+    {
+      "q": "How do I decontaminate after chemical exposure?",
+      "a": "Remove all clothing immediately by cutting it off rather than pulling over the head, and place it in a sealed bag far from clean areas. Flush exposed skin with large amounts of clean water for at least 15-20 minutes, washing from head to toe so runoff flows away from the body. If the eyes are affected, flush them with clean water for at least 15 minutes while holding the eyelids open, and seek medical attention immediately.",
+      "tags": ["decontamination", "chemical exposure", "washing", "flushing", "clothing removal", "skin"]
+    },
+    {
+      "q": "How do I shelter in place during a chemical event?",
+      "a": "Go to an interior room on an upper floor (most chemical agents are heavier than air and settle low), close all windows and doors, and turn off all fans, heating, and air conditioning systems. Seal gaps around doors, windows, and vents with plastic sheeting and duct tape, or use wet towels to block under-door gaps. Listen to emergency broadcasts for all-clear signals, as you may need to evacuate if the contamination becomes prolonged.",
+      "tags": ["shelter in place", "sealing", "plastic sheeting", "duct tape", "interior room", "ventilation"]
+    },
+    {
+      "q": "What should I do if I encounter a chemical spill or release?",
+      "a": "Move immediately upwind, uphill, and upstream from the source, as most chemical agents are denser than air and flow downhill and downstream. Cover your mouth and nose with a wet cloth, avoid touching any liquid or powder on the ground, and do not walk through puddles or visible clouds. Once at a safe distance, remove and bag your outer clothing and wash exposed skin thoroughly with soap and water.",
+      "tags": ["chemical spill", "upwind", "uphill", "evacuation", "escape", "safety"]
+    },
+    {
+      "q": "How do I identify safe zones after a chemical event?",
+      "a": "Safe zones are generally upwind and at higher elevation from the release point, as most chemical agents are heavier than air. Avoid basements, tunnels, low-lying areas, and valleys where heavier-than-air chemicals accumulate. Monitor wind direction using smoke, dust, or a wet finger held up; wind blowing from behind you toward the contaminated area means you are positioned upwind and relatively safer.",
+      "tags": ["safe zone", "upwind", "elevation", "wind direction", "chemical", "evacuation"]
+    },
+    {
+      "q": "What are common types of chemical agents and their effects?",
+      "a": "Nerve agents (like sarin) cause pinpoint pupils, excessive salivation, muscle twitching, and breathing failure within minutes. Blister agents (like mustard gas) cause delayed skin blisters, eye damage, and respiratory injury hours after exposure. Choking agents (like chlorine) attack the lungs causing coughing, chest tightness, and fluid buildup, while blood agents (like hydrogen cyanide) prevent cells from using oxygen, causing rapid collapse.",
+      "tags": ["nerve agent", "blister agent", "mustard gas", "sarin", "chlorine", "cyanide", "types"]
+    }
+  ],
+  "war_zone": [
+    {
+      "q": "How do I move safely in an urban warfare environment?",
+      "a": "Move in short, quick dashes from one solid cover position to the next, never crossing open areas at a predictable pace or in a straight line. Stay low and use walls, vehicles, and rubble as cover, keeping close to building walls while avoiding doorways and windows which are common targeting points. Move during periods of reduced visibility such as dawn, dusk, or during rainfall, and always have a destination in mind before you begin moving.",
+      "tags": ["urban warfare", "movement", "cover", "concealment", "dashing", "safety"]
+    },
+    {
+      "q": "How should I behave at a military checkpoint?",
+      "a": "Approach slowly with your hands visible, keep vehicle windows down and interior lights on if at night, and avoid sudden movements. Have identification documents readily accessible and present them calmly when asked; do not reach into bags or pockets without announcing what you are doing. Be polite, comply with instructions, avoid arguments or confrontation, and do not photograph or record the checkpoint or personnel.",
+      "tags": ["checkpoint", "military", "identification", "documents", "behavior", "compliance"]
+    },
+    {
+      "q": "How do I reduce the risk from snipers?",
+      "a": "Never silhouette yourself against the sky, light-colored walls, or open windows; stay in the shadows and below window sill level when inside buildings. Cross open areas such as streets and intersections at unpredictable intervals and vary your crossing point each time. Hang blankets or sheets across windows and open areas to block sight lines, and avoid patterns of behavior such as using the same route or appearing at the same time each day.",
+      "tags": ["sniper", "concealment", "silhouette", "crossing", "cover", "avoidance"]
+    },
+    {
+      "q": "How do I recognize and avoid unexploded ordnance?",
+      "a": "Do not touch, kick, or approach any unfamiliar metal objects, shells, grenades, or devices found on the ground, even if they appear old or rusty. Unexploded ordnance (UXO) can detonate from the slightest disturbance, vibration, or temperature change. Mark the location visibly if possible, warn others, and report the location to military or mine-clearance authorities; maintain a distance of at least 25 meters from the suspected device.",
+      "tags": ["UXO", "unexploded ordnance", "mines", "bombs", "IED", "explosive", "safety"]
+    },
+    {
+      "q": "How do I identify myself as a civilian in a conflict zone?",
+      "a": "Wear clearly civilian clothing in light or neutral colors, avoid anything that resembles military camouflage, and do not carry objects that could be mistaken for weapons such as pipes or long tools. Display white flags or cloth when approaching military forces, keep your hands visible at all times, and move slowly and deliberately. Carry your identification documents on your person at all times, along with copies stored separately in case originals are confiscated.",
+      "tags": ["civilian", "identification", "white flag", "non-combatant", "clothing", "documents"]
+    },
+    {
+      "q": "How do I plan and execute an evacuation route?",
+      "a": "Identify multiple routes to at least two different safe destinations such as refugee assembly points, embassies, or border crossings, and walk or drive each route in advance if possible. Avoid main roads and predictable routes that may be targeted, mined, or controlled by hostile forces; use back streets, alleys, and cross-country paths. Travel light with essential documents, water, first aid supplies, and food for 72 hours in a ready bag that can be grabbed quickly.",
+      "tags": ["evacuation", "route planning", "bug out", "escape", "safe destination", "go bag"]
+    },
+    {
+      "q": "How do I protect important documents in a war zone?",
+      "a": "Make multiple copies of all critical documents including passports, identification, birth certificates, property deeds, and medical records, and store them in different locations. Keep originals in a waterproof bag or container on your person, and store digital copies on a USB drive and in cloud storage if internet access is available. Photograph all important documents with your phone so you always have a backup copy accessible.",
+      "tags": ["documents", "passport", "identification", "copies", "protection", "preservation"]
+    },
+    {
+      "q": "How do I find and use safe spaces during active combat?",
+      "a": "Basements and interior rooms with thick walls and no windows provide the best protection from shrapnel and gunfire during active fighting. Stay away from exterior walls, glass windows, and the top floors of buildings, and position yourself behind multiple layers of concrete, brick, or sandbags. Identify your safe space in advance, keep supplies there including water, food, first aid, and a flashlight, and stay put until the fighting moves away.",
+      "tags": ["safe room", "combat", "protection", "basement", "shrapnel", "active fighting"]
+    }
+  ],
+  "psychological": [
+    {
+      "q": "How do I maintain morale in a prolonged survival situation?",
+      "a": "Establish a daily routine with specific tasks and goals to create a sense of purpose and normalcy. Celebrate small victories such as successfully building a fire or finding clean water, and maintain physical activity even when you do not feel motivated. Social connection is critical; talk to companions regularly, share stories, and if alone, keep a journal or talk aloud to maintain cognitive function.",
+      "tags": ["morale", "routine", "motivation", "mental health", "purpose", "survival mindset"]
+    },
+    {
+      "q": "How do I make good decisions under extreme stress?",
+      "a": "Use the STOP method: Stop what you are doing, Think about your situation, Observe your surroundings and resources, and Plan your next action based on priorities. Avoid making impulsive decisions driven by fear or panic; if you are not in immediate danger, take a few deep breaths and assess before acting. Prioritize decisions using the Rule of Threes: you can survive about 3 minutes without air, 3 hours without shelter in extreme conditions, 3 days without water, and 3 weeks without food.",
+      "tags": ["decision making", "stress", "STOP method", "priorities", "Rule of Threes", "panic"]
+    },
+    {
+      "q": "How do I manage sleep deprivation in a survival scenario?",
+      "a": "Prioritize getting at least 4-6 hours of sleep per 24-hour period even in dangerous situations by taking shifts with companions or finding a secure location. Power naps of 10-20 minutes can restore alertness for 1-2 hours when a full sleep period is impossible. Avoid caffeine in large doses as it leads to a crash; instead, use physical movement, cold water on the face, and conversation to stay alert during critical periods.",
+      "tags": ["sleep", "deprivation", "rest", "alertness", "napping", "fatigue", "shifts"]
+    },
+    {
+      "q": "How do I cope with grief and trauma during a crisis?",
+      "a": "Acknowledge your emotions rather than suppressing them; it is normal to feel fear, anger, sadness, and guilt during a crisis. Focus on what you can control and take concrete actions toward survival goals to combat feelings of helplessness. Talk about your experiences with others when possible, and understand that emotional reactions like nightmares, flashbacks, and hypervigilance are normal stress responses that may require professional help after the crisis passes.",
+      "tags": ["grief", "trauma", "coping", "emotions", "PTSD", "mental health", "stress response"]
+    },
+    {
+      "q": "How do I lead a group effectively during an emergency?",
+      "a": "Take charge calmly and decisively by assigning specific tasks to each person based on their abilities, which reduces panic and creates a sense of order. Communicate clearly and honestly about the situation without causing unnecessary alarm, and involve the group in decision-making when time permits to build buy-in. Check in with each person regularly, watch for signs of psychological distress, and be willing to delegate authority to maintain your own energy and effectiveness.",
+      "tags": ["leadership", "group", "delegation", "communication", "emergency", "management"]
+    },
+    {
+      "q": "How do I keep children calm during a disaster or emergency?",
+      "a": "Speak in a calm, reassuring voice and maintain physical contact through hugs or holding hands to provide a sense of security. Give children age-appropriate explanations of what is happening and simple tasks they can do to help, which gives them a sense of control. Maintain routines as much as possible including regular mealtimes and bedtime stories, and let children express their fears through talking, drawing, or play without dismissing their emotions.",
+      "tags": ["children", "kids", "calm", "reassurance", "routine", "parenting", "disaster"]
+    },
+    {
+      "q": "How do I overcome the psychological effects of isolation?",
+      "a": "Maintain a structured daily routine with physical tasks, mental exercises, and creative activities to keep your mind engaged and combat despair. Talk aloud, keep a journal, or create a companion figure to maintain your verbal and cognitive skills during solo survival. Set daily and weekly goals, mark the passage of time on a calendar, and remind yourself regularly of the people and things you are surviving for to maintain your will to live.",
+      "tags": ["isolation", "loneliness", "solitude", "mental health", "routine", "journal", "purpose"]
+    },
+    {
+      "q": "How do I manage panic attacks in a survival situation?",
+      "a": "When panic strikes, focus on slow, controlled breathing: inhale for 4 counts, hold for 4 counts, exhale for 4 counts, and hold for 4 counts (box breathing). Ground yourself by naming 5 things you can see, 4 things you can touch, 3 things you can hear, 2 things you can smell, and 1 thing you can taste. Remind yourself that panic is temporary and that the physical symptoms, though frightening, are your body's fight-or-flight response and will pass within minutes.",
+      "tags": ["panic attack", "anxiety", "breathing", "grounding", "box breathing", "5-4-3-2-1", "calm"]
+    }
+  ],
+  "communication": [
+    {
+      "q": "What are the basics of using a two-way radio?",
+      "a": "Hold the radio upright with the antenna vertical and away from your body, press the push-to-talk (PTT) button, wait one second, then speak clearly and slowly in short sentences. Release the PTT button to listen for a response; you cannot hear while transmitting. Conserve battery by keeping transmissions brief and turning the radio off when not actively monitoring, and always identify yourself and the intended recipient at the start of each transmission.",
+      "tags": ["radio", "two-way", "PTT", "transmit", "receive", "communication", "walkie-talkie"]
+    },
+    {
+      "q": "What is the Morse code alphabet and how do I use it?",
+      "a": "Morse code uses combinations of short signals (dots/dits) and long signals (dashes/dahs) to represent letters: A is .- , B is -... , S is ... , O is --- , and SOS is ...---... with no pauses between letters. Practice the most essential codes first: SOS for distress, and common words like HELP (.... . .-.. .--.) and WATER (.-- .- - . .-.). You can transmit Morse code using any device that produces distinct on-off signals, including flashlights, whistles, mirrors, tapping on pipes, or radio.",
+      "tags": ["Morse code", "dots", "dashes", "SOS", "alphabet", "signaling", "code"]
+    },
+    {
+      "q": "What emergency radio frequencies should I know?",
+      "a": "The international distress frequency for marine and aviation is 121.5 MHz (VHF aircraft) and 156.8 MHz Channel 16 (VHF marine). The Family Radio Service (FRS) Channel 1 (462.5625 MHz) is commonly used as an emergency coordination channel in civilian scenarios in North America. CB Radio Channel 9 (27.065 MHz) is the designated emergency channel, and NOAA Weather Radio broadcasts continuous weather and emergency alerts on 162.400-162.550 MHz.",
+      "tags": ["frequency", "emergency", "VHF", "CB", "channel 16", "channel 9", "NOAA", "distress"]
+    },
+    {
+      "q": "How do I set up a message relay system?",
+      "a": "Establish relay stations at intervals within radio or visual range of each other, with each station repeating messages word-for-word to the next. Use a standardized message format: sender identity, recipient identity, message priority (routine, urgent, emergency), the message itself, and confirmation of receipt. Write messages down before transmitting to avoid errors, and have the recipient repeat the message back to verify accuracy.",
+      "tags": ["relay", "message", "station", "communication chain", "repeater", "transmission"]
+    },
+    {
+      "q": "How do I communicate using signal flags?",
+      "a": "The simplest flag system uses a single bright-colored flag: waving it side to side means 'attention' or 'need help,' waving it in a figure-eight pattern indicates distress, and holding it still means 'message understood.' In the international maritime flag system, a solid red flag means danger, a white flag with a red diagonal stripe means 'I need assistance,' and a solid yellow flag means quarantine. Any brightly colored fabric tied to a pole in an exposed location serves as a general signal of human presence.",
+      "tags": ["signal flags", "maritime", "flag", "visual", "communication", "semaphore"]
+    },
+    {
+      "q": "How do I send a distress message on a radio?",
+      "a": "On any radio, transmit 'Mayday Mayday Mayday' followed by your identification, your location (coordinates or description), the nature of your emergency, the number of people involved, and what assistance you need. Repeat the Mayday message on multiple frequencies if possible, and continue transmitting at regular intervals until you receive a response. If you cannot voice transmit, key the microphone in the SOS Morse pattern: three short, three long, three short.",
+      "tags": ["Mayday", "distress call", "radio", "emergency", "broadcast", "SOS", "transmission"]
+    },
+    {
+      "q": "How do I communicate without technology in a disaster?",
+      "a": "Establish a physical message drop point such as a bulletin board at a community gathering location where people can leave written notes in waterproof containers. Use chalk, paint, or carved symbols on visible surfaces to leave directional markers or status messages for others. Agree on a system of visual or audible signals with your group in advance: for example, two gunshots or horn blasts means 'rally to base,' and three means 'emergency, come immediately.'",
+      "tags": ["low tech", "no technology", "message drop", "chalk", "symbols", "analog", "communication"]
+    },
+    {
+      "q": "How do I use the NATO phonetic alphabet for clear communication?",
+      "a": "The NATO phonetic alphabet replaces letters with standard words to prevent miscommunication over noisy channels: Alpha, Bravo, Charlie, Delta, Echo, Foxtrot, Golf, Hotel, India, Juliet, Kilo, Lima, Mike, November, Oscar, Papa, Quebec, Romeo, Sierra, Tango, Uniform, Victor, Whiskey, X-ray, Yankee, Zulu. Use it when spelling out names, locations, or critical information over radio to ensure accuracy. Numbers are spoken digit by digit: '135' becomes 'one-three-five,' not 'one hundred thirty-five.'",
+      "tags": ["NATO", "phonetic alphabet", "Alpha Bravo", "spelling", "radio", "clarity", "communication"]
+    }
+  ]
+}
