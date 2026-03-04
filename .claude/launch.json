@@ -2,17 +2,34 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "promo-website",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "website/public", "-p", "3001"],
+      "port": 3001
+    },
+    {
       "name": "expo-web",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["expo", "start", "--web", "--port", "8081", "--clear"],
+      "runtimeArgs": ["expo", "start", "--web", "--port", "8081"],
       "port": 8081
     },
     {
-      "name": "promo-website",
+      "name": "expo-start",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["serve", "website/public"],
-      "port": 3001,
-      "autoPort": true
+      "runtimeArgs": ["expo", "start"],
+      "port": 8081
+    },
+    {
+      "name": "expo-android",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["expo", "run:android"],
+      "port": 8081
+    },
+    {
+      "name": "expo-ios",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["expo", "run:ios"],
+      "port": 8081
     }
   ]
 }

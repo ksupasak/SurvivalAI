@@ -77,6 +77,15 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="room"
+        options={{
+          title: t('tab_room'),
+          tabBarIcon: ({ color, size }) => (
+            <TabIcon name="people" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="notes"
         options={{
           title: t('tab_notes') || 'Notes',

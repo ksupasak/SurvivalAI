@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, FontSize, BorderRadius } from '@/constants/theme';
+import { t, useLocale, getCategoryName } from '@/services/i18n';
 import {
   calculateSupplies,
   CalculatorInput,
@@ -33,22 +34,6 @@ if (
 }
 
 // ─── Constants ──────────────────────────────────────────────────────────────
-
-const CLIMATE_OPTIONS: { value: Climate; label: string; icon: IoniconsName }[] = [
-  { value: 'temperate', label: 'Temperate', icon: 'thermometer-outline' },
-  { value: 'hot', label: 'Hot', icon: 'sunny-outline' },
-  { value: 'cold', label: 'Cold', icon: 'snow-outline' },
-];
-
-const ACTIVITY_OPTIONS: {
-  value: ActivityLevel;
-  label: string;
-  color: string;
-}[] = [
-  { value: 'low', label: 'Low', color: Colors.green },
-  { value: 'moderate', label: 'Moderate', color: Colors.amber },
-  { value: 'high', label: 'High', color: Colors.red },
-];
 
 const DAY_PRESETS = [3, 7, 14, 30];
 
@@ -162,7 +147,7 @@ function CategoryCard({
         <View style={[styles.categoryIconContainer, { backgroundColor: `${color}15` }]}>
           <Ionicons name={icon} size={20} color={color} />
         </View>
-        <Text style={styles.categoryName}>{category.category}</Text>
+        <Text style={styles.categoryName}>{getCategoryName(category.category)}</Text>
         <View style={styles.categoryBadge}>
           <Text style={styles.categoryBadgeText}>
             {checkedCount}/{category.items.length}
@@ -226,6 +211,20 @@ function CategoryCard({
 // ─── Main Screen ────────────────────────────────────────────────────────────
 
 export default function CalculatorScreen() {
+  useLocale(); // Re-render when locale changes
+
+  const CLIMATE_OPTIONS: { value: Climate; label: string; icon: IoniconsName }[] = [
+    { value: 'temperate', label: t('climate_temperate'), icon: 'thermometer-outline' },
+    { value: 'hot', label: t('climate_hot'), icon: 'sunny-outline' },
+    { value: 'cold', label: t('climate_cold'), icon: 'snow-outline' },
+  ];
+
+  const ACTIVITY_OPTIONS: { value: ActivityLevel; label: string; color: string }[] = [
+    { value: 'low', label: t('activity_low'), color: Colors.green },
+    { value: 'moderate', label: t('activity_moderate'), color: Colors.amber },
+    { value: 'high', label: t('activity_high'), color: Colors.red },
+  ];
+
   // Input state
   const [people, setPeople] = useState(2);
   const [days, setDays] = useState(3);
@@ -295,8 +294,8 @@ export default function CalculatorScreen() {
 
   const handleExport = useCallback(() => {
     Alert.alert(
-      'Export Supply List',
-      'Export feature coming soon. You will be able to share your calculated supply list as a PDF or text file.',
+      t('calc_export_title'),
+      t('calc_export_msg'),
       [{ text: 'OK', style: 'default' }]
     );
   }, []);
@@ -314,23 +313,21 @@ export default function CalculatorScreen() {
         <View style={styles.header}>
           <View style={styles.headerTitleRow}>
             <View style={styles.headerAccent} />
-            <Text style={styles.headerTitle}>SUPPLY CALCULATOR</Text>
+            <Text style={styles.headerTitle}>{t('calc_supply_title')}</Text>
           </View>
-          <Text style={styles.headerSubtitle}>
-            Calculate survival supplies for your group
-          </Text>
+          <Text style={styles.headerSubtitle}>{t('calc_subtitle')}</Text>
         </View>
 
         {/* ── Input Card ─────────────────────────────────────── */}
         <View style={styles.inputCard}>
           <View style={styles.inputCardHeader}>
             <Ionicons name="options-outline" size={16} color={Colors.amber} />
-            <Text style={styles.inputCardTitle}>PARAMETERS</Text>
+            <Text style={styles.inputCardTitle}>{t('calc_parameters')}</Text>
           </View>
 
           {/* People Stepper */}
           <Stepper
-            label="NUMBER OF PEOPLE"
+            label={t('calc_num_people')}
             value={people}
             min={1}
             max={50}
@@ -341,12 +338,12 @@ export default function CalculatorScreen() {
 
           {/* Days Stepper + Presets */}
           <Stepper
-            label="NUMBER OF DAYS"
+            label={t('calc_num_days')}
             value={days}
             min={1}
             max={365}
             onValueChange={setDays}
-            suffix={days === 1 ? 'day' : 'days'}
+            suffix={days === 1 ? t('calc_day_singular') : t('calc_day_plural')}
           />
           <View style={styles.presetRow}>
             {DAY_PRESETS.map((preset) => (
@@ -392,7 +389,7 @@ export default function CalculatorScreen() {
           <View style={styles.divider} />
 
           {/* Climate Selection */}
-          <Text style={styles.fieldLabel}>CLIMATE</Text>
+          <Text style={styles.fieldLabel}>{t('calc_climate')}</Text>
           <View style={styles.pillRow}>
             {CLIMATE_OPTIONS.map((opt) => (
               <TouchableOpacity
@@ -424,7 +421,7 @@ export default function CalculatorScreen() {
           <View style={styles.divider} />
 
           {/* Activity Level */}
-          <Text style={styles.fieldLabel}>ACTIVITY LEVEL</Text>
+          <Text style={styles.fieldLabel}>{t('calc_activity')}</Text>
           <View style={styles.pillRow}>
             {ACTIVITY_OPTIONS.map((opt) => (
               <TouchableOpacity
@@ -467,7 +464,7 @@ export default function CalculatorScreen() {
           onPress={handleCalculate}
         >
           <Ionicons name="calculator" size={22} color={Colors.bg} />
-          <Text style={styles.calculateButtonText}>CALCULATE SUPPLIES</Text>
+          <Text style={styles.calculateButtonText}>{t('calc_btn_calculate')}</Text>
         </TouchableOpacity>
 
         {/* ── Results ─────────────────────────────────────────── */}
@@ -477,25 +474,29 @@ export default function CalculatorScreen() {
             <View style={styles.summaryCard}>
               <View style={styles.summaryIconRow}>
                 <Ionicons name="clipboard-outline" size={20} color={Colors.amber} />
-                <Text style={styles.summaryTitle}>SUPPLY SUMMARY</Text>
+                <Text style={styles.summaryTitle}>{t('calc_summary_title')}</Text>
               </View>
               <Text style={styles.summaryText}>
                 {result.input.people}{' '}
-                {result.input.people === 1 ? 'person' : 'people'} for{' '}
-                {result.input.days} {result.input.days === 1 ? 'day' : 'days'} in{' '}
-                {result.input.climate} climate
+                {result.input.people === 1 ? t('calc_person_singular') : t('calc_person_plural')}{' '}
+                {t('calc_for')}{' '}
+                {result.input.days}{' '}
+                {result.input.days === 1 ? t('calc_day_singular') : t('calc_day_plural')}{' '}
+                {t('calc_in')}{' '}
+                {result.input.climate === 'temperate' ? t('climate_temperate') : result.input.climate === 'hot' ? t('climate_hot') : t('climate_cold')}{' '}
+                {t('calc_climate_label')}
               </Text>
               <View style={styles.summaryMeta}>
                 <View style={styles.summaryMetaItem}>
                   <Ionicons name="fitness-outline" size={14} color={Colors.textSecondary} />
                   <Text style={styles.summaryMetaText}>
-                    {result.input.activityLevel} activity
+                    {t(`activity_${result.input.activityLevel}`)} {t('calc_activity_label')}
                   </Text>
                 </View>
                 <View style={styles.summaryMetaItem}>
                   <Ionicons name="cube-outline" size={14} color={Colors.textSecondary} />
                   <Text style={styles.summaryMetaText}>
-                    {totalItems} items total
+                    {totalItems} {t('calc_items_total')}
                   </Text>
                 </View>
               </View>
@@ -509,9 +510,9 @@ export default function CalculatorScreen() {
                   size={18}
                   color={progressColor}
                 />
-                <Text style={styles.progressTitle}>PREPARATION PROGRESS</Text>
+                <Text style={styles.progressTitle}>{t('calc_progress_title')}</Text>
                 <Text style={[styles.progressCount, { color: progressColor }]}>
-                  {checkedCount} of {totalItems} items
+                  {checkedCount} {t('calc_of')} {totalItems} {t('calc_items')}
                 </Text>
               </View>
               <View style={styles.progressBarBg}>
@@ -526,7 +527,7 @@ export default function CalculatorScreen() {
                 />
               </View>
               <Text style={styles.progressPercent}>
-                {Math.round(progressPercent)}% prepared
+                {Math.round(progressPercent)}% {t('calc_percent_prepared')}
               </Text>
             </View>
 
@@ -551,7 +552,7 @@ export default function CalculatorScreen() {
                     size={16}
                     color={Colors.cyan}
                   />
-                  <Text style={styles.notesSectionTitle}>NOTES</Text>
+                  <Text style={styles.notesSectionTitle}>{t('calc_notes_title')}</Text>
                 </View>
                 {result.notes.map((note, idx) => (
                   <View key={idx} style={styles.noteCard}>
@@ -574,7 +575,7 @@ export default function CalculatorScreen() {
               onPress={handleExport}
             >
               <Ionicons name="share-outline" size={18} color={Colors.amber} />
-              <Text style={styles.exportButtonText}>EXPORT SUPPLY LIST</Text>
+              <Text style={styles.exportButtonText}>{t('calc_export_btn')}</Text>
             </TouchableOpacity>
           </View>
         )}

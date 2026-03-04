@@ -19,7 +19,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, FontSize, BorderRadius } from '@/constants/theme';
 import { getResponse, clearChatHistory, type ChatMode, isOfflineLlmReady, initOfflineLlm, releaseOfflineLlm, subscribeLlmStatus, type LlmStatus } from '@/services/llm';
 import { speak, stopSpeaking } from '@/services/voice';
-import { setApiKey, hasApiKey } from '@/services/settings';
+import { setApiKey, hasApiKey, getCustomServerUrl, setCustomServerUrl, getCustomModel, setCustomModel } from '@/services/settings';
 import { useLocale, t } from '@/services/i18n';
 import {
   AVAILABLE_MODELS,
@@ -201,6 +201,9 @@ export default function ChatScreen() {
   const [onlineAvailable, setOnlineAvailable] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [apiKeyInput, setApiKeyInput] = useState('');
+  const [customUrlInput, setCustomUrlInput] = useState('');
+  const [customModelInput, setCustomModelInput] = useState('');
+  const [savedCustomUrl, setSavedCustomUrl] = useState<string | null>(null);
   const [offlineLlmAvailable, setOfflineLlmAvailable] = useState(false);
   const [llmStatus, setLlmStatus] = useState<LlmStatus>({ state: 'idle' });
   const [downloadStatus, setDownloadStatusState] = useState<DownloadStatus>({ state: 'idle' });
@@ -235,8 +238,15 @@ export default function ChatScreen() {
   }, []);
 
   const checkApiKey = async () => {
-    const has = await hasApiKey('openai');
-    setOnlineAvailable(has);
+    const [has, customUrl, customModel] = await Promise.all([
+      hasApiKey('openai'),
+      getCustomServerUrl(),
+      getCustomModel(),
+    ]);
+    setOnlineAvailable(has || !!customUrl);
+    setSavedCustomUrl(customUrl);
+    if (customUrl) setCustomUrlInput(customUrl);
+    if (customModel) setCustomModelInput(customModel);
   };
 
   const checkDownloadedModels = async () => {
@@ -398,7 +408,8 @@ export default function ChatScreen() {
       Alert.alert(t('error'), t('api_key_empty'));
       return;
     }
-    if (!trimmed.startsWith('sk-')) {
+    // Only enforce sk- format when no custom server is configured
+    if (!savedCustomUrl && !trimmed.startsWith('sk-')) {
       Alert.alert(t('error'), t('api_key_invalid_format'));
       return;
     }
@@ -411,7 +422,25 @@ export default function ChatScreen() {
     clearChatHistory();
 
     Alert.alert(t('success'), t('api_key_saved'));
-  }, [apiKeyInput]);
+  }, [apiKeyInput, savedCustomUrl]);
+
+  const handleSaveCustomServer = useCallback(async () => {
+    const url = customUrlInput.trim();
+    const model = customModelInput.trim();
+    await setCustomServerUrl(url);
+    await setCustomModel(model);
+    setSavedCustomUrl(url || null);
+    if (url) {
+      setOnlineAvailable(true);
+      setCurrentMode('online');
+      clearChatHistory();
+    } else {
+      const has = await hasApiKey('openai');
+      setOnlineAvailable(has);
+    }
+    setShowSettings(false);
+    Alert.alert(t('success'), url ? t('custom_server_saved') : t('custom_server_cleared'));
+  }, [customUrlInput, customModelInput]);
 
   const handleRemoveApiKey = useCallback(async () => {
     await setApiKey('openai', '');
@@ -809,6 +838,55 @@ export default function ChatScreen() {
                 <Text style={styles.securityNote}>
                   {t('api_key_security_note')}
                 </Text>
+              </View>
+
+              {/* ── Custom Server Section (Ollama etc.) ─────────────── */}
+              <View style={styles.settingsSection}>
+                <View style={styles.settingsSectionHeader}>
+                  <Ionicons name="server" size={20} color={Colors.amber} />
+                  <Text style={styles.settingsSectionTitle}>{t('custom_server_title')}</Text>
+                </View>
+                <Text style={styles.settingsDescription}>
+                  {t('custom_server_desc')}
+                </Text>
+                {savedCustomUrl ? (
+                  <View style={styles.apiKeyStatus}>
+                    <View style={styles.apiKeyStatusRow}>
+                      <Ionicons name="checkmark-circle" size={18} color={Colors.amber} />
+                      <Text style={[styles.apiKeyStatusText, { color: Colors.amber, flex: 1 }]} numberOfLines={1}>
+                        {savedCustomUrl}
+                      </Text>
+                    </View>
+                  </View>
+                ) : null}
+                <View style={styles.apiKeyInput}>
+                  <TextInput
+                    style={[styles.apiKeyTextInput, { marginBottom: Spacing.sm }]}
+                    value={customUrlInput}
+                    onChangeText={setCustomUrlInput}
+                    placeholder={t('custom_server_placeholder')}
+                    placeholderTextColor={Colors.textDim}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    keyboardType="url"
+                  />
+                  <TextInput
+                    style={styles.apiKeyTextInput}
+                    value={customModelInput}
+                    onChangeText={setCustomModelInput}
+                    placeholder={t('custom_model_placeholder')}
+                    placeholderTextColor={Colors.textDim}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                  />
+                </View>
+                <TouchableOpacity
+                  style={[styles.saveKeyButton, styles.saveKeyButtonActive, { marginTop: Spacing.md, alignSelf: 'flex-start' }]}
+                  onPress={handleSaveCustomServer}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.saveKeyTextActive}>{t('save')}</Text>
+                </TouchableOpacity>
               </View>
 
               {/* ── Offline AI Model Section ─────────────────────────── */}

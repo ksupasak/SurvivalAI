@@ -9,7 +9,8 @@
 
 import { Platform } from 'react-native';
 import { searchKnowledge, type KnowledgeEntry } from '@/services/knowledge-base';
-import { getApiKey } from '@/services/settings';
+import { getApiKey, getCustomServerUrl, getCustomModel } from '@/services/settings';
+import { t } from '@/services/i18n';
 import { getActiveModel, getModelPath, type ModelInfo } from '@/services/model-download';
 
 // llama.rn is native-only — lazy-load to avoid crashing on web
@@ -62,7 +63,7 @@ You should be prepared to help with:
 
 function formatKnowledgeResponse(results: KnowledgeEntry[], query: string): string {
   if (results.length === 0) {
-    return `I don't have specific information about "${query}" in my knowledge base. Try rephrasing your question or ask about topics like water purification, shelter building, fire starting, first aid, or navigation.`;
+    return t('kb_no_results');
   }
 
   if (results.length === 1) {
@@ -240,12 +241,18 @@ async function callOfflineLlm(message: string): Promise<string> {
   }
 }
 
-// ─── Online LLM (ChatGPT) ──────────────────────────────────────────────────
+// ─── Online LLM (ChatGPT / Custom OpenAI-compatible server) ───────────────────
 
 async function callChatGPT(message: string): Promise<string> {
-  const apiKey = await getApiKey('openai');
+  const [apiKey, customUrl, customModel] = await Promise.all([
+    getApiKey('openai'),
+    getCustomServerUrl(),
+    getCustomModel(),
+  ]);
 
-  if (!apiKey) {
+  // Custom server (e.g. Ollama) doesn't require an API key
+  const isCustomServer = !!customUrl;
+  if (!apiKey && !isCustomServer) {
     throw new Error('NO_API_KEY');
   }
 
@@ -259,14 +266,18 @@ async function callChatGPT(message: string): Promise<string> {
     ? [chatHistory[0], ...chatHistory.slice(-20)]
     : chatHistory;
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+  const baseUrl = customUrl ? customUrl.replace(/\/$/, '') : 'https://api.openai.com/v1';
+  const model = customModel || 'gpt-4o-mini';
+  const endpoint = `${baseUrl}/chat/completions`;
+
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
+
+  const response = await fetch(endpoint, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
+    headers,
     body: JSON.stringify({
-      model: 'gpt-4o-mini',
+      model,
       messages,
       max_tokens: 1024,
       temperature: 0.7,
