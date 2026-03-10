@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '@/constants/theme';
 import { useLocale, t } from '@/services/i18n';
+import { useTheme } from '@/contexts/ThemeContext';
 
 type IoniconsName = keyof typeof Ionicons.glyphMap;
 
@@ -17,16 +17,17 @@ function TabIcon({ name, color, size }: TabIconProps) {
 
 export default function TabLayout() {
   const locale = useLocale();
+  const { colors } = useTheme();
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: Colors.amber,
-        tabBarInactiveTintColor: Colors.textDim,
+        tabBarActiveTintColor: colors.amber,
+        tabBarInactiveTintColor: colors.textDim,
         tabBarStyle: {
-          backgroundColor: Colors.bg,
-          borderTopColor: Colors.border,
+          backgroundColor: colors.bg,
+          borderTopColor: colors.border,
           borderTopWidth: 1,
           height: 88,
           paddingBottom: 28,
@@ -78,12 +79,7 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="room"
-        options={{
-          title: t('tab_room'),
-          tabBarIcon: ({ color, size }) => (
-            <TabIcon name="people" color={color} size={size} />
-          ),
-        }}
+        options={{ href: null }}
       />
       <Tabs.Screen
         name="notes"
@@ -96,12 +92,7 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="seeking"
-        options={{
-          title: t('tab_seeking'),
-          tabBarIcon: ({ color, size }) => (
-            <TabIcon name="radio" color={color} size={size} />
-          ),
-        }}
+        options={{ href: null }}
       />
     </Tabs>
   );

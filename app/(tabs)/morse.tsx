@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -13,17 +13,354 @@ import {
   PanResponder,
   LayoutChangeEvent,
   GestureResponderEvent,
+  Switch,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { Colors, Spacing, FontSize, BorderRadius } from '@/constants/theme';
+import { useRouter } from 'expo-router';
+import * as Brightness from 'expo-brightness';
+import { Spacing, FontSize, BorderRadius, type ColorScheme } from '@/constants/theme';
+import { useTheme } from '@/contexts/ThemeContext';
 import { textToMorse, morseToText, textToTimingSequence, generateSOSSequence } from '@/services/morse';
 import { playMorseSequence, stopPlayback, isPlaying, subscribeTorchState } from '@/services/flashlight';
 import { startDecoder, stopDecoder, updateSensitivity, clearDecoded, type DecoderUpdate } from '@/services/morse-decoder';
 import { QUICK_MESSAGES } from '@/constants/morse-code';
+import { startBeacon, stopBeacon, isBeaconActive, getBeaconStatus } from '@/services/ble-beacon';
+import { startAudioBeacon, stopAudioBeacon } from '@/services/audio-beacon';
+import { getBatteryLevel, estimateTimeRemaining } from '@/services/battery';
 
 type IoniconsName = keyof typeof Ionicons.glyphMap;
 type Mode = 'send' | 'read';
+type MorsePanel = 'morse' | 'seeking';
+
+// ─── Panel Switcher ──────────────────────────────────────────────────────────
+
+interface MorseSegBarProps {
+  active: MorsePanel;
+  onSelect: (p: MorsePanel) => void;
+}
+function MorseSegBar({ active, onSelect }: MorseSegBarProps) {
+  const { colors } = useTheme();
+  const morsePanelStyles = useMemo(() => createMorsePanelStyles(colors), [colors]);
+  return (
+    <View style={morsePanelStyles.bar}>
+      {(['morse', 'seeking'] as MorsePanel[]).map((p) => {
+        const isActive = active === p;
+        return (
+          <TouchableOpacity
+            key={p}
+            style={[morsePanelStyles.option, isActive && morsePanelStyles.optionActive]}
+            onPress={() => onSelect(p)}
+            activeOpacity={0.8}
+          >
+            <Ionicons
+              name={p === 'morse' ? 'flashlight' : 'radio'}
+              size={15}
+              color={isActive ? colors.bg : colors.textSecondary}
+            />
+            <Text style={[morsePanelStyles.label, isActive && morsePanelStyles.labelActive]}>
+              {p === 'morse' ? 'MORSE' : 'SEEKING'}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+}
+
+// ─── Seeking Helpers ─────────────────────────────────────────────────────────
+
+function generateDeviceId(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let id = '';
+  for (let i = 0; i < 4; i++) {
+    id += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return id;
+}
+
+function formatElapsed(seconds: number): string {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+}
+
+// ─── Seeking Panel Component ─────────────────────────────────────────────────
+
+interface SeekingPanelProps {
+  onSwitchToMorse: () => void;
+}
+function SeekingPanel({ onSwitchToMorse }: SeekingPanelProps) {
+  const router = useRouter();
+  const { colors } = useTheme();
+  const seekingStyles = useMemo(() => createSeekingStyles(colors), [colors]);
+
+  const [beaconActive, setBeaconActive] = useState(false);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [batteryLevel, setBatteryLevel] = useState<number>(-1);
+  const [batteryTimeEstimate, setBatteryTimeEstimate] = useState('Calculating...');
+  const [deviceName, setDeviceName] = useState(`SURVIVOR-${generateDeviceId()}`);
+  const [emergencyMessage, setEmergencyMessage] = useState('Need rescue. Please help.');
+  const [includeGPS, setIncludeGPS] = useState(true);
+  const [audioBeacon, setAudioBeacon] = useState(false);
+  const [gpsCoords] = useState({ lat: '34.0522', lon: '-118.2437' });
+  const [gpsAcquired, setGpsAcquired] = useState(false);
+
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const glowAnim = useRef(new Animated.Value(0.4)).current;
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const savedBrightness = useRef<number | null>(null);
+
+  const fetchBattery = useCallback(async () => {
+    const level = await getBatteryLevel();
+    setBatteryLevel(level);
+    const estimate = estimateTimeRemaining(level, beaconActive);
+    setBatteryTimeEstimate(estimate);
+  }, [beaconActive]);
+
+  useEffect(() => {
+    fetchBattery();
+    const interval = setInterval(fetchBattery, 30000);
+    return () => clearInterval(interval);
+  }, [fetchBattery]);
+
+  useEffect(() => {
+    if (beaconActive) {
+      const pulse = Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, { toValue: 1.08, duration: 1200, useNativeDriver: true }),
+          Animated.timing(pulseAnim, { toValue: 1, duration: 1200, useNativeDriver: true }),
+        ])
+      );
+      const glow = Animated.loop(
+        Animated.sequence([
+          Animated.timing(glowAnim, { toValue: 1, duration: 1000, useNativeDriver: true }),
+          Animated.timing(glowAnim, { toValue: 0.4, duration: 1000, useNativeDriver: true }),
+        ])
+      );
+      pulse.start();
+      glow.start();
+      return () => { pulse.stop(); glow.stop(); };
+    } else {
+      pulseAnim.setValue(1);
+      glowAnim.setValue(0.4);
+    }
+  }, [beaconActive, pulseAnim, glowAnim]);
+
+  useEffect(() => {
+    if (beaconActive) {
+      setElapsedSeconds(0);
+      timerRef.current = setInterval(() => setElapsedSeconds((p) => p + 1), 1000);
+    } else {
+      if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+      setElapsedSeconds(0);
+    }
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [beaconActive]);
+
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    if (beaconActive) {
+      (async () => {
+        try {
+          const current = await Brightness.getBrightnessAsync();
+          savedBrightness.current = current;
+          await Brightness.setBrightnessAsync(0.05);
+        } catch (_) {}
+      })();
+    } else if (savedBrightness.current !== null) {
+      Brightness.setBrightnessAsync(savedBrightness.current).catch(() => {});
+      savedBrightness.current = null;
+    }
+  }, [beaconActive]);
+
+  useEffect(() => {
+    return () => {
+      stopAudioBeacon();
+      if (Platform.OS !== 'web' && savedBrightness.current !== null) {
+        Brightness.setBrightnessAsync(savedBrightness.current).catch(() => {});
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (beaconActive && includeGPS) {
+      const timeout = setTimeout(() => setGpsAcquired(true), 2500);
+      return () => clearTimeout(timeout);
+    } else {
+      setGpsAcquired(false);
+    }
+  }, [beaconActive, includeGPS]);
+
+  const handleToggleBeacon = async () => {
+    if (beaconActive) {
+      await stopBeacon();
+      await stopAudioBeacon();
+      setBeaconActive(false);
+    } else {
+      await startBeacon({
+        deviceName,
+        message: emergencyMessage,
+        latitude: includeGPS ? parseFloat(gpsCoords.lat) : undefined,
+        longitude: includeGPS ? parseFloat(gpsCoords.lon) : undefined,
+      });
+      if (audioBeacon) await startAudioBeacon();
+      setBeaconActive(true);
+      fetchBattery();
+    }
+  };
+
+  const getBatteryColor = () => {
+    if (batteryLevel < 0) return colors.textDim;
+    const pct = batteryLevel * 100;
+    if (pct > 50) return colors.green;
+    if (pct >= 20) return colors.amber;
+    return colors.red;
+  };
+  const batteryPct = batteryLevel >= 0 ? `${Math.round(batteryLevel * 100)}%` : 'N/A';
+
+  return (
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={seekingStyles.scrollContent} showsVerticalScrollIndicator={false}>
+      {/* Header */}
+      <View style={seekingStyles.header}>
+        <View style={seekingStyles.headerTitleRow}>
+          <Ionicons name="radio" size={22} color={colors.green} />
+          <Text style={seekingStyles.headerTitle}>SEEKING MODE</Text>
+        </View>
+        <Text style={seekingStyles.headerSubtitle}>Emergency Rescue Beacon</Text>
+      </View>
+
+      {/* Activation Button */}
+      <View style={seekingStyles.activationContainer}>
+        <TouchableOpacity activeOpacity={0.8} onPress={handleToggleBeacon}>
+          <Animated.View style={[seekingStyles.activationCircle,
+            beaconActive
+              ? { borderColor: colors.green, backgroundColor: colors.greenDim, transform: [{ scale: pulseAnim }] }
+              : { borderColor: colors.green, backgroundColor: 'transparent' },
+          ]}>
+            {beaconActive ? (
+              <Animated.View style={{ opacity: glowAnim, alignItems: 'center' }}>
+                <Ionicons name="radio" size={52} color={colors.green} />
+                <Text style={seekingStyles.activationTextActive}>BEACON ACTIVE</Text>
+              </Animated.View>
+            ) : (
+              <View style={{ alignItems: 'center' }}>
+                <Ionicons name="scan-outline" size={52} color={colors.green} />
+                <Text style={seekingStyles.activationText}>ACTIVATE{'\n'}SEEKING MODE</Text>
+              </View>
+            )}
+          </Animated.View>
+        </TouchableOpacity>
+        <Text style={seekingStyles.activationDescription}>
+          Broadcasts your location via BLE & WiFi for rescue teams to detect
+        </Text>
+      </View>
+
+      {/* Status Dashboard */}
+      {beaconActive && (
+        <View style={seekingStyles.card}>
+          <Text style={seekingStyles.cardTitle}>STATUS DASHBOARD</Text>
+          <View style={seekingStyles.statusGrid}>
+            {[
+              { label: 'Beacon Status', value: 'Active', color: colors.green, dot: true },
+              { label: 'Time Active', value: formatElapsed(elapsedSeconds), color: colors.cyan },
+              { label: 'Battery Level', value: batteryPct, color: getBatteryColor() },
+              { label: 'Est. Battery Time', value: batteryTimeEstimate, color: colors.amber },
+              { label: 'GPS Coordinates', value: includeGPS ? (gpsAcquired ? `${gpsCoords.lat}, ${gpsCoords.lon}` : 'Acquiring...') : 'Disabled', color: gpsAcquired ? colors.cyan : colors.textDim },
+              { label: 'Signal Range', value: '~50m BLE / ~100m WiFi', color: colors.textSecondary },
+            ].map((item) => (
+              <View key={item.label} style={seekingStyles.statusItem}>
+                <Text style={seekingStyles.statusLabel}>{item.label}</Text>
+                <View style={seekingStyles.statusValueRow}>
+                  {item.dot && <View style={[seekingStyles.statusDot, { backgroundColor: item.color }]} />}
+                  <Text style={[seekingStyles.statusValue, { color: item.color }]}>{item.value}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
+
+      {/* Configuration */}
+      <View style={seekingStyles.card}>
+        <Text style={seekingStyles.cardTitle}>BEACON CONFIGURATION</Text>
+        <Text style={seekingStyles.inputLabel}>Device Name</Text>
+        <TextInput style={seekingStyles.textInput} value={deviceName} onChangeText={setDeviceName}
+          placeholderTextColor={colors.textDim} editable={!beaconActive} color={colors.text} />
+        <Text style={seekingStyles.inputLabel}>Emergency Message</Text>
+        <TextInput style={[seekingStyles.textInput, { minHeight: 72, textAlignVertical: 'top' }]}
+          value={emergencyMessage} onChangeText={setEmergencyMessage}
+          multiline numberOfLines={3} placeholderTextColor={colors.textDim} editable={!beaconActive} color={colors.text} />
+        <View style={seekingStyles.toggleRow}>
+          <View style={seekingStyles.toggleInfo}>
+            <Ionicons name="location" size={18} color={colors.cyan} />
+            <Text style={seekingStyles.toggleLabel}>Include GPS</Text>
+          </View>
+          <Switch value={includeGPS} onValueChange={setIncludeGPS}
+            trackColor={{ false: colors.bgSecondary, true: colors.greenDim }}
+            thumbColor={includeGPS ? colors.green : colors.textDim} disabled={beaconActive} />
+        </View>
+        <View style={seekingStyles.toggleRow}>
+          <View style={seekingStyles.toggleInfo}>
+            <Ionicons name="volume-high" size={18} color={colors.amber} />
+            <Text style={seekingStyles.toggleLabel}>Audio Beacon (SOS Tone)</Text>
+          </View>
+          <Switch value={audioBeacon} onValueChange={setAudioBeacon}
+            trackColor={{ false: colors.bgSecondary, true: colors.amberDark }}
+            thumbColor={audioBeacon ? colors.amber : colors.textDim} disabled={beaconActive} />
+        </View>
+        <Text style={seekingStyles.configNote}>
+          When active, nearby rescue teams with compatible devices can detect your signal and read your emergency message.
+        </Text>
+      </View>
+
+      {/* Personal Info */}
+      <View style={seekingStyles.card}>
+        <Text style={seekingStyles.cardTitle}>PERSONAL INFO BROADCAST</Text>
+        <View style={seekingStyles.profilePlaceholder}>
+          <Ionicons name="person-circle-outline" size={36} color={colors.textDim} />
+          <Text style={seekingStyles.profilePlaceholderText}>No personal info set. Tap to add your medical profile.</Text>
+        </View>
+        <TouchableOpacity style={seekingStyles.profileButton} onPress={() => router.push('/profile')}>
+          <Ionicons name="create-outline" size={18} color={colors.amber} />
+          <Text style={seekingStyles.profileButtonText}>Edit Profile</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Battery Preservation */}
+      <View style={seekingStyles.card}>
+        <View style={seekingStyles.cardTitleRow}>
+          <Ionicons name="battery-charging" size={20} color={colors.green} />
+          <Text style={[seekingStyles.cardTitle, { marginBottom: 0 }]}>BATTERY PRESERVATION</Text>
+        </View>
+        <View style={seekingStyles.bulletList}>
+          {['Reducing screen brightness', 'Disabling non-essential services', 'Using low-power BLE advertising', 'Optimizing signal intervals'].map((item, i) => (
+            <View key={i} style={seekingStyles.bulletItem}>
+              <Ionicons name="checkmark-circle" size={16} color={colors.green} />
+              <Text style={seekingStyles.bulletText}>{item}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      {/* Emergency Actions */}
+      <View style={seekingStyles.emergencyActions}>
+        <TouchableOpacity style={seekingStyles.emergencyButton} onPress={onSwitchToMorse}>
+          <Ionicons name="flashlight" size={20} color={colors.amber} />
+          <Text style={seekingStyles.emergencyButtonText}>Send SOS via Morse</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[seekingStyles.emergencyButton, seekingStyles.emergencyButtonRed]}
+          onPress={() => Alert.alert('Emergency Call', 'This feature would initiate an emergency call to local services.', [{ text: 'OK' }])}>
+          <Ionicons name="call" size={20} color={colors.red} />
+          <Text style={[seekingStyles.emergencyButtonText, { color: colors.red }]}>Emergency Call</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={{ height: Spacing.xxxl }} />
+    </ScrollView>
+  );
+}
 
 // ---------- Signal Log Entry ----------
 interface SignalLogEntry {
@@ -35,6 +372,8 @@ interface SignalLogEntry {
 
 // ---------- Morse Visual Strip ----------
 function MorseVisualStrip({ morse }: { morse: string }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   if (!morse) return null;
 
   const elements: React.ReactNode[] = [];
@@ -63,8 +402,11 @@ function MorseVisualStrip({ morse }: { morse: string }) {
   );
 }
 
-// ---------- Main Screen ----------
+// ─── Main Screen ─────────────────────────────────────────────────────────────
 export default function MorseScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  const [activePanel, setActivePanel] = useState<MorsePanel>('morse');
   const [mode, setMode] = useState<Mode>('send');
 
   // SEND mode state
@@ -400,6 +742,16 @@ export default function MorseScreen() {
   // ---------- Render ----------
   return (
     <SafeAreaView style={styles.safeArea}>
+      {/* ── Panel Switcher ───────────────────────────────────────────── */}
+      <MorseSegBar active={activePanel} onSelect={setActivePanel} />
+
+      {/* ══ SEEKING PANEL ════════════════════════════════════════════════ */}
+      {activePanel === 'seeking' && (
+        <SeekingPanel onSwitchToMorse={() => setActivePanel('morse')} />
+      )}
+
+      {/* ══ MORSE PANEL ══════════════════════════════════════════════════ */}
+      {activePanel === 'morse' && <>
       {/* Hidden CameraView for torch control on native */}
       {isNative && hasCameraPermission && (transmitting || sosActive) && (
         <CameraView
@@ -429,7 +781,7 @@ export default function MorseScreen() {
             <Ionicons
               name="flashlight"
               size={16}
-              color={mode === 'send' ? Colors.bg : Colors.textSecondary}
+              color={mode === 'send' ? colors.bg : colors.textSecondary}
             />
             <Text style={[styles.segmentText, mode === 'send' && styles.segmentTextActive]}>
               SEND
@@ -443,7 +795,7 @@ export default function MorseScreen() {
             <Ionicons
               name="eye"
               size={16}
-              color={mode === 'read' ? Colors.bg : Colors.textSecondary}
+              color={mode === 'read' ? colors.bg : colors.textSecondary}
             />
             <Text style={[styles.segmentText, mode === 'read' && styles.segmentTextActive]}>
               READ
@@ -488,7 +840,7 @@ export default function MorseScreen() {
 
             {/* Quick Messages */}
             <View style={styles.sectionHeader}>
-              <Ionicons name="flash" size={14} color={Colors.amber} />
+              <Ionicons name="flash" size={14} color={colors.amber} />
               <Text style={styles.sectionTitle}>QUICK MESSAGES</Text>
             </View>
             <ScrollView
@@ -510,7 +862,7 @@ export default function MorseScreen() {
                   <Ionicons
                     name={msg.icon as IoniconsName}
                     size={14}
-                    color={inputText === msg.text ? Colors.bg : Colors.amber}
+                    color={inputText === msg.text ? colors.bg : colors.amber}
                   />
                   <Text
                     style={[
@@ -526,7 +878,7 @@ export default function MorseScreen() {
 
             {/* Text Input */}
             <View style={styles.sectionHeader}>
-              <Ionicons name="create" size={14} color={Colors.amber} />
+              <Ionicons name="create" size={14} color={colors.amber} />
               <Text style={styles.sectionTitle}>MESSAGE INPUT</Text>
             </View>
             <View style={styles.inputCard}>
@@ -535,7 +887,7 @@ export default function MorseScreen() {
                 value={inputText}
                 onChangeText={setInputText}
                 placeholder="Enter message to encode..."
-                placeholderTextColor={Colors.textDim}
+                placeholderTextColor={colors.textDim}
                 multiline
                 maxLength={120}
                 autoCapitalize="characters"
@@ -549,7 +901,7 @@ export default function MorseScreen() {
             {morseOutput ? (
               <View style={styles.morsePreviewCard}>
                 <View style={styles.morsePreviewHeader}>
-                  <Ionicons name="code-working" size={14} color={Colors.amber} />
+                  <Ionicons name="code-working" size={14} color={colors.amber} />
                   <Text style={styles.morsePreviewLabel}>ENCODED OUTPUT</Text>
                 </View>
                 <Text style={styles.morsePreviewText}>{morseOutput}</Text>
@@ -561,7 +913,7 @@ export default function MorseScreen() {
 
             {/* Speed Control */}
             <View style={styles.sectionHeader}>
-              <Ionicons name="speedometer" size={14} color={Colors.amber} />
+              <Ionicons name="speedometer" size={14} color={colors.amber} />
               <Text style={styles.sectionTitle}>TRANSMISSION SPEED</Text>
             </View>
             <View style={styles.speedCard}>
@@ -571,7 +923,7 @@ export default function MorseScreen() {
                   onPress={decrementWpm}
                   activeOpacity={0.6}
                 >
-                  <Ionicons name="remove" size={20} color={Colors.amber} />
+                  <Ionicons name="remove" size={20} color={colors.amber} />
                 </TouchableOpacity>
                 <View style={styles.stepperValueContainer}>
                   <Text style={styles.stepperValue}>{wpm}</Text>
@@ -582,7 +934,7 @@ export default function MorseScreen() {
                   onPress={incrementWpm}
                   activeOpacity={0.6}
                 >
-                  <Ionicons name="add" size={20} color={Colors.amber} />
+                  <Ionicons name="add" size={20} color={colors.amber} />
                 </TouchableOpacity>
               </View>
               <View style={styles.speedBarTrack}>
@@ -611,7 +963,7 @@ export default function MorseScreen() {
               <Ionicons
                 name={transmitting ? 'stop-circle' : 'radio'}
                 size={22}
-                color={transmitting ? '#FFFFFF' : Colors.bg}
+                color={transmitting ? '#FFFFFF' : colors.bg}
               />
               <Text
                 style={[
@@ -645,7 +997,7 @@ export default function MorseScreen() {
             {/* Personal Info Quick Send */}
             <View style={styles.personalInfoCard}>
               <View style={styles.personalInfoHeader}>
-                <Ionicons name="person-circle" size={18} color={Colors.cyan} />
+                <Ionicons name="person-circle" size={18} color={colors.cyan} />
                 <Text style={styles.personalInfoTitle}>PERSONAL INFO BEACON</Text>
               </View>
               <Text style={styles.personalInfoDesc}>
@@ -656,7 +1008,7 @@ export default function MorseScreen() {
                 onPress={handlePersonalInfo}
                 activeOpacity={0.7}
               >
-                <Ionicons name="id-card" size={16} color={Colors.cyan} />
+                <Ionicons name="id-card" size={16} color={colors.cyan} />
                 <Text style={styles.personalInfoButtonText}>SEND PERSONAL INFO</Text>
               </TouchableOpacity>
             </View>
@@ -666,7 +1018,7 @@ export default function MorseScreen() {
           <View>
             {/* Camera Preview + Light Indicator */}
             <View style={styles.sectionHeader}>
-              <Ionicons name="camera" size={14} color={Colors.amber} />
+              <Ionicons name="camera" size={14} color={colors.amber} />
               <Text style={styles.sectionTitle}>LIGHT SOURCE DETECTION</Text>
             </View>
             <View
@@ -682,7 +1034,7 @@ export default function MorseScreen() {
                 <CameraView style={styles.cameraPreview} facing="back" />
               ) : (
                 <View style={styles.cameraPlaceholder}>
-                  <Ionicons name="camera-outline" size={48} color={Colors.textDim} />
+                  <Ionicons name="camera-outline" size={48} color={colors.textDim} />
                   <Text style={styles.cameraPlaceholderText}>
                     {isNative ? 'Tap Start Detection to open camera' : 'Camera not available on web'}
                   </Text>
@@ -726,13 +1078,13 @@ export default function MorseScreen() {
               {detecting && (
                 <View style={styles.cameraOverlay} pointerEvents="none">
                   <View style={styles.detectingBadge}>
-                    <View style={[styles.detectingDot, lightDetected && { backgroundColor: Colors.green }]} />
+                    <View style={[styles.detectingDot, lightDetected && { backgroundColor: colors.green }]} />
                     <Text style={styles.detectingText}>
                       {lightDetected ? 'LIGHT ON' : 'SCANNING'}
                     </Text>
                   </View>
                   <View style={styles.luxBadge}>
-                    <Ionicons name="sunny" size={12} color={Colors.amber} />
+                    <Ionicons name="sunny" size={12} color={colors.amber} />
                     <Text style={styles.luxText}>{currentLux} lux</Text>
                   </View>
                 </View>
@@ -745,7 +1097,7 @@ export default function MorseScreen() {
 
             {/* Detection Controls */}
             <View style={styles.sectionHeader}>
-              <Ionicons name="options" size={14} color={Colors.amber} />
+              <Ionicons name="options" size={14} color={colors.amber} />
               <Text style={styles.sectionTitle}>DETECTION CONTROLS</Text>
             </View>
             <View style={styles.controlsCard}>
@@ -791,7 +1143,7 @@ export default function MorseScreen() {
                   <Text style={styles.sliderLabelText}>100 HIGH</Text>
                 </View>
                 <View style={styles.thresholdRow}>
-                  <Ionicons name="sunny-outline" size={12} color={Colors.textDim} />
+                  <Ionicons name="sunny-outline" size={12} color={colors.textDim} />
                   <Text style={styles.thresholdText}>
                     Trigger threshold: {getThresholdLux(sensitivity)} lux
                   </Text>
@@ -810,7 +1162,7 @@ export default function MorseScreen() {
                 <Ionicons
                   name={detecting ? 'stop-circle' : 'play-circle'}
                   size={20}
-                  color={detecting ? '#FFFFFF' : Colors.bg}
+                  color={detecting ? '#FFFFFF' : colors.bg}
                 />
                 <Text
                   style={[
@@ -825,7 +1177,7 @@ export default function MorseScreen() {
 
             {/* Decoded Output */}
             <View style={styles.sectionHeader}>
-              <Ionicons name="document-text" size={14} color={Colors.amber} />
+              <Ionicons name="document-text" size={14} color={colors.amber} />
               <Text style={styles.sectionTitle}>DECODED OUTPUT</Text>
             </View>
             <View style={styles.decodedCard}>
@@ -840,14 +1192,14 @@ export default function MorseScreen() {
                       onPress={() => { clearDecoded(); setDecodedText(''); setDecodedMorse(''); }}
                       activeOpacity={0.7}
                     >
-                      <Ionicons name="trash-outline" size={14} color={Colors.textDim} />
+                      <Ionicons name="trash-outline" size={14} color={colors.textDim} />
                       <Text style={styles.clearButtonText}>CLEAR</Text>
                     </TouchableOpacity>
                   )}
                 </>
               ) : (
                 <View style={styles.decodedPlaceholder}>
-                  <Ionicons name="radio-outline" size={24} color={Colors.textDim} />
+                  <Ionicons name="radio-outline" size={24} color={colors.textDim} />
                   <Text style={styles.decodedPlaceholderText}>
                     Decoded signals will appear here...
                   </Text>
@@ -857,7 +1209,7 @@ export default function MorseScreen() {
 
             {/* Demo Buttons */}
             <View style={styles.sectionHeader}>
-              <Ionicons name="flask" size={14} color={Colors.amber} />
+              <Ionicons name="flask" size={14} color={colors.amber} />
               <Text style={styles.sectionTitle}>SIMULATION</Text>
             </View>
             <View style={styles.demoRow}>
@@ -867,7 +1219,7 @@ export default function MorseScreen() {
                 activeOpacity={0.7}
                 disabled={demoAnimating}
               >
-                <Ionicons name="alert-circle" size={16} color={Colors.red} />
+                <Ionicons name="alert-circle" size={16} color={colors.red} />
                 <Text style={styles.demoButtonText}>DEMO SOS</Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -876,7 +1228,7 @@ export default function MorseScreen() {
                 activeOpacity={0.7}
                 disabled={demoAnimating}
               >
-                <Ionicons name="hand-left" size={16} color={Colors.amber} />
+                <Ionicons name="hand-left" size={16} color={colors.amber} />
                 <Text style={styles.demoButtonText}>DEMO HELP</Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -885,14 +1237,14 @@ export default function MorseScreen() {
                 activeOpacity={0.7}
                 disabled={demoAnimating}
               >
-                <Ionicons name="water" size={16} color={Colors.cyan} />
+                <Ionicons name="water" size={16} color={colors.cyan} />
                 <Text style={styles.demoButtonText}>DEMO WATER</Text>
               </TouchableOpacity>
             </View>
 
             {/* Signal Log */}
             <View style={styles.sectionHeader}>
-              <Ionicons name="list" size={14} color={Colors.amber} />
+              <Ionicons name="list" size={14} color={colors.amber} />
               <Text style={styles.sectionTitle}>SIGNAL LOG</Text>
               {signalLog.length > 0 && (
                 <Text style={styles.logCount}>{signalLog.length}</Text>
@@ -903,12 +1255,12 @@ export default function MorseScreen() {
                 {signalLog.map((entry) => (
                   <View key={entry.id} style={styles.logEntry}>
                     <View style={styles.logTimeContainer}>
-                      <Ionicons name="time" size={12} color={Colors.textDim} />
+                      <Ionicons name="time" size={12} color={colors.textDim} />
                       <Text style={styles.logTime}>{entry.time}</Text>
                     </View>
                     <Text style={styles.logMorse}>{entry.morse}</Text>
                     <View style={styles.logDecodedRow}>
-                      <Ionicons name="arrow-forward" size={12} color={Colors.green} />
+                      <Ionicons name="arrow-forward" size={12} color={colors.green} />
                       <Text style={styles.logDecoded}>{entry.text}</Text>
                     </View>
                   </View>
@@ -916,7 +1268,7 @@ export default function MorseScreen() {
               </View>
             ) : (
               <View style={styles.emptyLog}>
-                <Ionicons name="document-outline" size={20} color={Colors.textDim} />
+                <Ionicons name="document-outline" size={20} color={colors.textDim} />
                 <Text style={styles.emptyLogText}>
                   No signals decoded yet. Use Demo buttons to simulate.
                 </Text>
@@ -928,12 +1280,13 @@ export default function MorseScreen() {
         {/* Bottom Spacer */}
         <View style={{ height: Spacing.xxxl }} />
       </ScrollView>
+      </>}
     </SafeAreaView>
   );
 }
 
 // ==================== STYLES ====================
-const styles = StyleSheet.create({
+function createStyles(c: ColorScheme) { return StyleSheet.create({
   hiddenCamera: {
     width: 1,
     height: 1,
@@ -942,7 +1295,7 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.bg,
+    backgroundColor: c.bg,
   },
   scrollView: {
     flex: 1,
@@ -966,19 +1319,19 @@ const styles = StyleSheet.create({
   headerAccent: {
     width: 4,
     height: 28,
-    backgroundColor: Colors.amber,
+    backgroundColor: c.amber,
     borderRadius: 2,
     marginRight: Spacing.md,
   },
   headerTitle: {
     fontSize: FontSize.title,
     fontWeight: '800',
-    color: Colors.text,
+    color: c.text,
     letterSpacing: 3,
   },
   headerSubtitle: {
     fontSize: FontSize.md,
-    color: Colors.textSecondary,
+    color: c.textSecondary,
     letterSpacing: 1,
     marginLeft: Spacing.lg + Spacing.xs,
   },
@@ -990,11 +1343,11 @@ const styles = StyleSheet.create({
   },
   segmentedControl: {
     flexDirection: 'row',
-    backgroundColor: Colors.bgCard,
+    backgroundColor: c.bgCard,
     borderRadius: BorderRadius.md,
     padding: 3,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: c.border,
   },
   segmentButton: {
     flex: 1,
@@ -1006,16 +1359,16 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.sm,
   },
   segmentButtonActive: {
-    backgroundColor: Colors.amber,
+    backgroundColor: c.amber,
   },
   segmentText: {
     fontSize: FontSize.sm,
     fontWeight: '700',
-    color: Colors.textSecondary,
+    color: c.textSecondary,
     letterSpacing: 2,
   },
   segmentTextActive: {
-    color: Colors.bg,
+    color: c.bg,
   },
 
   // ---------- Section Header ----------
@@ -1029,7 +1382,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: FontSize.xs,
     fontWeight: '700',
-    color: Colors.textSecondary,
+    color: c.textSecondary,
     letterSpacing: 2,
     flex: 1,
   },
@@ -1044,12 +1397,12 @@ const styles = StyleSheet.create({
     width: 110,
     height: 110,
     borderRadius: 55,
-    backgroundColor: Colors.red,
+    backgroundColor: c.red,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 3,
-    borderColor: Colors.red + '60',
-    shadowColor: Colors.red,
+    borderColor: c.red + '60',
+    shadowColor: c.red,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.5,
     shadowRadius: 20,
@@ -1070,7 +1423,7 @@ const styles = StyleSheet.create({
   },
   sosLabel: {
     fontSize: FontSize.sm,
-    color: Colors.textSecondary,
+    color: c.textSecondary,
     marginTop: Spacing.md,
     letterSpacing: 0.5,
   },
@@ -1079,7 +1432,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.sm,
     marginTop: Spacing.sm,
-    backgroundColor: Colors.redDim,
+    backgroundColor: c.redDim,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xs,
     borderRadius: BorderRadius.full,
@@ -1088,12 +1441,12 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: Colors.red,
+    backgroundColor: c.red,
   },
   sosIndicatorText: {
     fontSize: FontSize.xs,
     fontWeight: '700',
-    color: Colors.red,
+    color: c.red,
     letterSpacing: 1,
   },
 
@@ -1109,38 +1462,38 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
-    backgroundColor: Colors.bgCard,
+    backgroundColor: c.bgCard,
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
     borderRadius: BorderRadius.full,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: c.border,
   },
   quickPillActive: {
-    backgroundColor: Colors.amber,
-    borderColor: Colors.amber,
+    backgroundColor: c.amber,
+    borderColor: c.amber,
   },
   quickPillText: {
     fontSize: FontSize.sm,
     fontWeight: '600',
-    color: Colors.text,
+    color: c.text,
     letterSpacing: 1,
   },
   quickPillTextActive: {
-    color: Colors.bg,
+    color: c.bg,
   },
 
   // ---------- Text Input ----------
   inputCard: {
-    backgroundColor: Colors.bgCard,
+    backgroundColor: c.bgCard,
     borderRadius: BorderRadius.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: c.border,
     overflow: 'hidden',
   },
   textInput: {
     fontSize: FontSize.lg,
-    color: Colors.text,
+    color: c.text,
     padding: Spacing.lg,
     minHeight: 80,
     textAlignVertical: 'top',
@@ -1155,20 +1508,20 @@ const styles = StyleSheet.create({
   },
   charCount: {
     fontSize: FontSize.xs,
-    color: Colors.textDim,
+    color: c.textDim,
     letterSpacing: 0.5,
   },
 
   // ---------- Morse Preview ----------
   morsePreviewCard: {
-    backgroundColor: Colors.bgCard,
+    backgroundColor: c.bgCard,
     borderRadius: BorderRadius.lg,
     padding: Spacing.lg,
     marginTop: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: c.border,
     borderLeftWidth: 3,
-    borderLeftColor: Colors.amber,
+    borderLeftColor: c.amber,
   },
   morsePreviewHeader: {
     flexDirection: 'row',
@@ -1179,12 +1532,12 @@ const styles = StyleSheet.create({
   morsePreviewLabel: {
     fontSize: FontSize.xs,
     fontWeight: '700',
-    color: Colors.textSecondary,
+    color: c.textSecondary,
     letterSpacing: 2,
   },
   morsePreviewText: {
     fontSize: FontSize.lg,
-    color: Colors.amber,
+    color: c.amber,
     fontFamily: 'monospace',
     letterSpacing: 2,
     lineHeight: 26,
@@ -1197,32 +1550,32 @@ const styles = StyleSheet.create({
   morseStripLabel: {
     fontSize: FontSize.xs,
     fontWeight: '700',
-    color: Colors.textSecondary,
+    color: c.textSecondary,
     letterSpacing: 2,
     marginBottom: Spacing.md,
   },
   morseStrip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.bgCard,
+    backgroundColor: c.bgCard,
     borderRadius: BorderRadius.md,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: c.border,
     minHeight: 44,
   },
   morseDot: {
     width: 10,
     height: 10,
     borderRadius: 2,
-    backgroundColor: Colors.amber,
+    backgroundColor: c.amber,
     marginHorizontal: 2,
   },
   morseDash: {
     width: 28,
     height: 10,
     borderRadius: 2,
-    backgroundColor: Colors.amber,
+    backgroundColor: c.amber,
     marginHorizontal: 2,
   },
   morseCharGap: {
@@ -1233,17 +1586,17 @@ const styles = StyleSheet.create({
     width: 6,
     height: 10,
     borderLeftWidth: 1,
-    borderLeftColor: Colors.textDim + '50',
+    borderLeftColor: c.textDim + '50',
     marginHorizontal: 8,
   },
 
   // ---------- Speed Control ----------
   speedCard: {
-    backgroundColor: Colors.bgCard,
+    backgroundColor: c.bgCard,
     borderRadius: BorderRadius.lg,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: c.border,
   },
   stepperRow: {
     flexDirection: 'row',
@@ -1255,11 +1608,11 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: Colors.bgSecondary,
+    backgroundColor: c.bgSecondary,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: c.border,
   },
   stepperValueContainer: {
     alignItems: 'center',
@@ -1268,26 +1621,26 @@ const styles = StyleSheet.create({
   stepperValue: {
     fontSize: FontSize.xxxl,
     fontWeight: '800',
-    color: Colors.amber,
+    color: c.amber,
     letterSpacing: 1,
   },
   stepperUnit: {
     fontSize: FontSize.xs,
     fontWeight: '600',
-    color: Colors.textSecondary,
+    color: c.textSecondary,
     letterSpacing: 2,
     marginTop: 2,
   },
   speedBarTrack: {
     height: 4,
-    backgroundColor: Colors.bgSecondary,
+    backgroundColor: c.bgSecondary,
     borderRadius: 2,
     marginTop: Spacing.lg,
     overflow: 'hidden',
   },
   speedBarFill: {
     height: '100%',
-    backgroundColor: Colors.amber,
+    backgroundColor: c.amber,
     borderRadius: 2,
   },
   speedLabels: {
@@ -1297,7 +1650,7 @@ const styles = StyleSheet.create({
   },
   speedLabelText: {
     fontSize: FontSize.xs,
-    color: Colors.textDim,
+    color: c.textDim,
     letterSpacing: 1,
   },
 
@@ -1307,18 +1660,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.md,
-    backgroundColor: Colors.amber,
+    backgroundColor: c.amber,
     paddingVertical: Spacing.lg,
     borderRadius: BorderRadius.lg,
     marginTop: Spacing.xl,
   },
   transmitButtonActive: {
-    backgroundColor: Colors.red,
+    backgroundColor: c.red,
   },
   transmitButtonText: {
     fontSize: FontSize.lg,
     fontWeight: '800',
-    color: Colors.bg,
+    color: c.bg,
     letterSpacing: 3,
   },
   transmitButtonTextActive: {
@@ -1333,35 +1686,35 @@ const styles = StyleSheet.create({
   progressTrack: {
     width: '100%',
     height: 6,
-    backgroundColor: Colors.bgCard,
+    backgroundColor: c.bgCard,
     borderRadius: 3,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: c.border,
   },
   progressFill: {
     height: '100%',
-    backgroundColor: Colors.amber,
+    backgroundColor: c.amber,
     borderRadius: 3,
   },
   progressText: {
     fontSize: FontSize.xs,
     fontWeight: '600',
-    color: Colors.textSecondary,
+    color: c.textSecondary,
     letterSpacing: 1,
     marginTop: Spacing.sm,
   },
 
   // ---------- Personal Info ----------
   personalInfoCard: {
-    backgroundColor: Colors.bgCard,
+    backgroundColor: c.bgCard,
     borderRadius: BorderRadius.lg,
     padding: Spacing.lg,
     marginTop: Spacing.xxl,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: c.border,
     borderTopWidth: 2,
-    borderTopColor: Colors.cyan,
+    borderTopColor: c.cyan,
   },
   personalInfoHeader: {
     flexDirection: 'row',
@@ -1372,12 +1725,12 @@ const styles = StyleSheet.create({
   personalInfoTitle: {
     fontSize: FontSize.sm,
     fontWeight: '700',
-    color: Colors.cyan,
+    color: c.cyan,
     letterSpacing: 1.5,
   },
   personalInfoDesc: {
     fontSize: FontSize.md,
-    color: Colors.textSecondary,
+    color: c.textSecondary,
     lineHeight: 20,
     marginBottom: Spacing.lg,
   },
@@ -1386,14 +1739,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.sm,
-    backgroundColor: Colors.cyan + '15',
+    backgroundColor: c.cyan + '15',
     paddingVertical: Spacing.md,
     borderRadius: BorderRadius.md,
   },
   personalInfoButtonText: {
     fontSize: FontSize.sm,
     fontWeight: '700',
-    color: Colors.cyan,
+    color: c.cyan,
     letterSpacing: 1,
   },
 
@@ -1403,7 +1756,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.lg,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: c.border,
     backgroundColor: '#000',
   },
   cameraPreview: {
@@ -1413,12 +1766,12 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.bgSecondary,
+    backgroundColor: c.bgSecondary,
     gap: Spacing.md,
   },
   cameraPlaceholderText: {
     fontSize: FontSize.md,
-    color: Colors.textDim,
+    color: c.textDim,
     textAlign: 'center',
   },
   cameraOverlay: {
@@ -1443,7 +1796,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: Colors.red,
+    backgroundColor: c.red,
   },
   detectingText: {
     fontSize: FontSize.xs,
@@ -1463,7 +1816,7 @@ const styles = StyleSheet.create({
   luxText: {
     fontSize: FontSize.xs,
     fontWeight: '700',
-    color: Colors.amber,
+    color: c.amber,
     letterSpacing: 0.5,
   },
   lightFlash: {
@@ -1472,25 +1825,25 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: Colors.green + '15',
+    backgroundColor: c.green + '15',
     borderWidth: 2,
-    borderColor: Colors.green,
+    borderColor: c.green,
     borderRadius: BorderRadius.lg,
   },
 
   // ---------- Detection Controls ----------
   controlsCard: {
-    backgroundColor: Colors.bgCard,
+    backgroundColor: c.bgCard,
     borderRadius: BorderRadius.lg,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: c.border,
     gap: Spacing.lg,
   },
   controlLabel: {
     fontSize: FontSize.sm,
     fontWeight: '600',
-    color: Colors.textSecondary,
+    color: c.textSecondary,
     letterSpacing: 1,
   },
   sensitivityHeaderRow: {
@@ -1500,17 +1853,17 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   sensitivityBadge: {
-    backgroundColor: Colors.amber + '20',
+    backgroundColor: c.amber + '20',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xs,
     borderRadius: BorderRadius.full,
     borderWidth: 1,
-    borderColor: Colors.amber + '40',
+    borderColor: c.amber + '40',
   },
   sensitivityBadgeText: {
     fontSize: FontSize.md,
     fontWeight: '800',
-    color: Colors.amber,
+    color: c.amber,
     letterSpacing: 1,
   },
 
@@ -1522,15 +1875,15 @@ const styles = StyleSheet.create({
   },
   sliderTrack: {
     height: 6,
-    backgroundColor: Colors.bgSecondary,
+    backgroundColor: c.bgSecondary,
     borderRadius: 3,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: c.border,
   },
   sliderFill: {
     height: '100%',
-    backgroundColor: Colors.amber,
+    backgroundColor: c.amber,
     borderRadius: 3,
   },
   sliderThumb: {
@@ -1538,11 +1891,11 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: Colors.amber,
+    backgroundColor: c.amber,
     borderWidth: 3,
-    borderColor: Colors.bg,
+    borderColor: c.bg,
     marginLeft: -12,
-    shadowColor: Colors.amber,
+    shadowColor: c.amber,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.5,
     shadowRadius: 6,
@@ -1556,13 +1909,13 @@ const styles = StyleSheet.create({
   },
   sliderLabelText: {
     fontSize: FontSize.xs,
-    color: Colors.textDim,
+    color: c.textDim,
     letterSpacing: 1,
   },
   sliderLabelCenter: {
     fontSize: FontSize.xs,
     fontWeight: '700',
-    color: Colors.amber,
+    color: c.amber,
     letterSpacing: 1,
   },
   thresholdRow: {
@@ -1574,7 +1927,7 @@ const styles = StyleSheet.create({
   },
   thresholdText: {
     fontSize: FontSize.xs,
-    color: Colors.textDim,
+    color: c.textDim,
     letterSpacing: 0.5,
   },
 
@@ -1592,37 +1945,37 @@ const styles = StyleSheet.create({
     height: 60,
     borderRadius: 30,
     borderWidth: 2,
-    borderColor: Colors.amber + 'AA',
+    borderColor: c.amber + 'AA',
   },
   reticleRingActive: {
-    borderColor: Colors.green,
+    borderColor: c.green,
     borderWidth: 3,
   },
   reticleLineH: {
     position: 'absolute',
     width: 80,
     height: 1,
-    backgroundColor: Colors.amber + '88',
+    backgroundColor: c.amber + '88',
   },
   reticleLineV: {
     position: 'absolute',
     width: 1,
     height: 80,
-    backgroundColor: Colors.amber + '88',
+    backgroundColor: c.amber + '88',
   },
   reticleLineActive: {
-    backgroundColor: Colors.green + '88',
+    backgroundColor: c.green + '88',
   },
   reticleDot: {
     position: 'absolute',
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: Colors.amber,
+    backgroundColor: c.amber,
   },
   reticleDotActive: {
-    backgroundColor: Colors.green,
-    shadowColor: Colors.green,
+    backgroundColor: c.green,
+    shadowColor: c.green,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 1,
     shadowRadius: 8,
@@ -1649,17 +2002,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.sm,
-    backgroundColor: Colors.green,
+    backgroundColor: c.green,
     paddingVertical: Spacing.md,
     borderRadius: BorderRadius.md,
   },
   detectionButtonActive: {
-    backgroundColor: Colors.red,
+    backgroundColor: c.red,
   },
   detectionButtonText: {
     fontSize: FontSize.md,
     fontWeight: '700',
-    color: Colors.bg,
+    color: c.bg,
     letterSpacing: 1.5,
   },
   detectionButtonTextActive: {
@@ -1668,29 +2021,29 @@ const styles = StyleSheet.create({
 
   // ---------- Decoded Output ----------
   decodedCard: {
-    backgroundColor: Colors.bgCard,
+    backgroundColor: c.bgCard,
     borderRadius: BorderRadius.lg,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: c.border,
     minHeight: 100,
   },
   decodedMorseText: {
     fontSize: FontSize.lg,
-    color: Colors.amber,
+    color: c.amber,
     fontFamily: 'monospace',
     letterSpacing: 2,
     lineHeight: 26,
   },
   decodedDivider: {
     height: 1,
-    backgroundColor: Colors.border,
+    backgroundColor: c.border,
     marginVertical: Spacing.md,
   },
   decodedTextLarge: {
     fontSize: FontSize.xxl,
     fontWeight: '700',
-    color: Colors.green,
+    color: c.green,
     letterSpacing: 2,
   },
   clearButton: {
@@ -1702,12 +2055,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xs,
     borderRadius: BorderRadius.sm,
-    backgroundColor: Colors.bgSecondary,
+    backgroundColor: c.bgSecondary,
   },
   clearButtonText: {
     fontSize: FontSize.xs,
     fontWeight: '600',
-    color: Colors.textDim,
+    color: c.textDim,
     letterSpacing: 1,
   },
   decodedPlaceholder: {
@@ -1719,7 +2072,7 @@ const styles = StyleSheet.create({
   },
   decodedPlaceholderText: {
     fontSize: FontSize.md,
-    color: Colors.textDim,
+    color: c.textDim,
     letterSpacing: 0.5,
   },
 
@@ -1734,11 +2087,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.xs,
-    backgroundColor: Colors.bgCard,
+    backgroundColor: c.bgCard,
     paddingVertical: Spacing.md,
     borderRadius: BorderRadius.md,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: c.border,
   },
   demoButtonDisabled: {
     opacity: 0.4,
@@ -1746,7 +2099,7 @@ const styles = StyleSheet.create({
   demoButtonText: {
     fontSize: FontSize.xs,
     fontWeight: '700',
-    color: Colors.text,
+    color: c.text,
     letterSpacing: 1,
   },
 
@@ -1754,8 +2107,8 @@ const styles = StyleSheet.create({
   logCount: {
     fontSize: FontSize.xs,
     fontWeight: '700',
-    color: Colors.bg,
-    backgroundColor: Colors.amber,
+    color: c.bg,
+    backgroundColor: c.amber,
     paddingHorizontal: Spacing.sm,
     paddingVertical: 2,
     borderRadius: BorderRadius.full,
@@ -1767,13 +2120,13 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   logEntry: {
-    backgroundColor: Colors.bgCard,
+    backgroundColor: c.bgCard,
     borderRadius: BorderRadius.md,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: c.border,
     borderLeftWidth: 3,
-    borderLeftColor: Colors.green,
+    borderLeftColor: c.green,
   },
   logTimeContainer: {
     flexDirection: 'row',
@@ -1783,13 +2136,13 @@ const styles = StyleSheet.create({
   },
   logTime: {
     fontSize: FontSize.xs,
-    color: Colors.textDim,
+    color: c.textDim,
     fontFamily: 'monospace',
     letterSpacing: 1,
   },
   logMorse: {
     fontSize: FontSize.md,
-    color: Colors.amber,
+    color: c.amber,
     fontFamily: 'monospace',
     letterSpacing: 2,
     marginBottom: Spacing.sm,
@@ -1802,23 +2155,297 @@ const styles = StyleSheet.create({
   logDecoded: {
     fontSize: FontSize.lg,
     fontWeight: '700',
-    color: Colors.green,
+    color: c.green,
     letterSpacing: 1,
   },
   emptyLog: {
-    backgroundColor: Colors.bgCard,
+    backgroundColor: c.bgCard,
     borderRadius: BorderRadius.md,
     padding: Spacing.xl,
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: c.border,
   },
   emptyLogText: {
     fontSize: FontSize.sm,
-    color: Colors.textDim,
+    color: c.textDim,
     textAlign: 'center',
     letterSpacing: 0.5,
   },
-});
+}); }
+
+// ─── Morse Panel Switcher Styles ─────────────────────────────────────────────
+
+function createMorsePanelStyles(c: ColorScheme) { return StyleSheet.create({
+  bar: {
+    flexDirection: 'row',
+    marginHorizontal: Spacing.xl,
+    marginTop: Spacing.md,
+    marginBottom: Spacing.xs,
+    backgroundColor: c.bgSecondary,
+    borderRadius: BorderRadius.lg,
+    padding: 3,
+    borderWidth: 1,
+    borderColor: c.border,
+  },
+  option: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.md,
+    gap: Spacing.xs,
+  },
+  optionActive: {
+    backgroundColor: c.amber,
+  },
+  label: {
+    fontSize: FontSize.sm,
+    fontWeight: '700',
+    color: c.textSecondary,
+    letterSpacing: 0.5,
+  },
+  labelActive: {
+    color: c.bg,
+  },
+}); }
+
+// ─── Seeking Panel Styles ─────────────────────────────────────────────────────
+
+function createSeekingStyles(c: ColorScheme) { return StyleSheet.create({
+  scrollContent: {
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.xxxl,
+  },
+  header: {
+    marginBottom: Spacing.xl,
+  },
+  headerTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginBottom: Spacing.xs,
+  },
+  headerTitle: {
+    fontSize: FontSize.xxl,
+    fontWeight: '800',
+    color: c.text,
+    letterSpacing: 2,
+  },
+  headerSubtitle: {
+    fontSize: FontSize.md,
+    color: c.textSecondary,
+    letterSpacing: 1,
+  },
+  activationContainer: {
+    alignItems: 'center',
+    marginBottom: Spacing.xl,
+  },
+  activationCircle: {
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    borderWidth: 3,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.lg,
+  },
+  activationText: {
+    fontSize: FontSize.md,
+    fontWeight: '700',
+    color: c.green,
+    textAlign: 'center',
+    letterSpacing: 1.5,
+    marginTop: Spacing.sm,
+  },
+  activationTextActive: {
+    fontSize: FontSize.md,
+    fontWeight: '700',
+    color: c.green,
+    textAlign: 'center',
+    letterSpacing: 1.5,
+    marginTop: Spacing.sm,
+  },
+  activationDescription: {
+    fontSize: FontSize.sm,
+    color: c.textSecondary,
+    textAlign: 'center',
+    lineHeight: 18,
+    paddingHorizontal: Spacing.xl,
+  },
+  card: {
+    backgroundColor: c.bgCard,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    borderColor: c.border,
+    padding: Spacing.lg,
+    marginBottom: Spacing.lg,
+  },
+  cardTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  cardTitle: {
+    fontSize: FontSize.sm,
+    fontWeight: '700',
+    color: c.amber,
+    letterSpacing: 1.5,
+    marginBottom: Spacing.md,
+  },
+  statusGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.md,
+  },
+  statusItem: {
+    width: '47%',
+    backgroundColor: c.bgSecondary,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: c.border,
+  },
+  statusLabel: {
+    fontSize: FontSize.xs,
+    fontWeight: '600',
+    color: c.textDim,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    marginBottom: Spacing.xs,
+  },
+  statusValueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+  statusValue: {
+    fontSize: FontSize.md,
+    fontWeight: '700',
+    color: c.text,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  inputLabel: {
+    fontSize: FontSize.sm,
+    fontWeight: '600',
+    color: c.textSecondary,
+    letterSpacing: 0.5,
+    marginBottom: Spacing.xs,
+    textTransform: 'uppercase',
+  },
+  textInput: {
+    backgroundColor: c.bgSecondary,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: c.border,
+    fontSize: FontSize.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
+    marginBottom: Spacing.md,
+  },
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: Spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: c.border,
+  },
+  toggleInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  toggleLabel: {
+    fontSize: FontSize.md,
+    color: c.text,
+  },
+  configNote: {
+    fontSize: FontSize.sm,
+    color: c.textDim,
+    marginTop: Spacing.md,
+    lineHeight: 18,
+    fontStyle: 'italic',
+  },
+  profilePlaceholder: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    backgroundColor: c.bgSecondary,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+    borderWidth: 1,
+    borderColor: c.border,
+  },
+  profilePlaceholderText: {
+    flex: 1,
+    fontSize: FontSize.sm,
+    color: c.textDim,
+    lineHeight: 18,
+  },
+  profileButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.sm,
+    backgroundColor: c.bgSecondary,
+    borderRadius: BorderRadius.md,
+    paddingVertical: Spacing.md,
+    borderWidth: 1,
+    borderColor: c.amberDark,
+  },
+  profileButtonText: {
+    fontSize: FontSize.md,
+    fontWeight: '600',
+    color: c.amber,
+    letterSpacing: 0.5,
+  },
+  bulletList: {
+    gap: Spacing.sm,
+  },
+  bulletItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  bulletText: {
+    fontSize: FontSize.md,
+    color: c.text,
+  },
+  emergencyActions: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+    marginTop: Spacing.sm,
+  },
+  emergencyButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.sm,
+    backgroundColor: c.bgCard,
+    borderRadius: BorderRadius.lg,
+    paddingVertical: Spacing.lg,
+    borderWidth: 1,
+    borderColor: c.amberDark,
+  },
+  emergencyButtonRed: {
+    borderColor: c.redDark,
+  },
+  emergencyButtonText: {
+    fontSize: FontSize.sm,
+    fontWeight: '700',
+    color: c.amber,
+    letterSpacing: 0.5,
+  },
+}); }

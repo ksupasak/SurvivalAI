@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SurvivalAI - Tactical Survival Assistant</title>
   <meta name="description" content="AI-powered offline survival assistant for disaster preparedness, war zones, and emergency situations. Chat with AI, calculate supplies, send Morse code SOS signals, and broadcast rescue beacons.">
-  <meta name="theme-color" content="#0A0E17">
+  <meta name="theme-color" content="#DC2626">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -13,23 +13,23 @@
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
-      --bg: #0A0E17;
-      --bg-secondary: #111827;
-      --bg-card: #151D2B;
-      --bg-card-hover: #1C2740;
-      --amber: #FFB800;
-      --amber-dark: #CC9300;
-      --amber-light: #FFD54F;
-      --green: #00FF41;
-      --green-dim: rgba(0,255,65,0.15);
-      --red: #FF3B3B;
-      --red-dim: rgba(255,59,59,0.15);
-      --blue: #3B82F6;
-      --cyan: #00D4FF;
-      --text: #E8ECF1;
-      --text-secondary: #8B95A5;
-      --text-dim: #4A5568;
-      --border: #1E293B;
+      --bg: #FFFFFF;
+      --bg-secondary: #F8F9FA;
+      --bg-card: #FFFFFF;
+      --bg-card-hover: #FFF5F5;
+      --amber: #DC2626;
+      --amber-dark: #B91C1C;
+      --amber-light: #FCA5A5;
+      --green: #16A34A;
+      --green-dim: rgba(22,163,74,0.12);
+      --red: #DC2626;
+      --red-dim: rgba(220,38,38,0.12);
+      --blue: #2563EB;
+      --cyan: #0891B2;
+      --text: #111827;
+      --text-secondary: #6B7280;
+      --text-dim: #9CA3AF;
+      --border: #E5E7EB;
     }
 
     html { scroll-behavior: smooth; }
@@ -45,7 +45,7 @@
     /* ===== NAVBAR ===== */
     .navbar {
       position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      background: rgba(10,14,23,0.92);
+      background: rgba(255,255,255,0.95);
       backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--border);
       padding: 0 2rem;
@@ -90,15 +90,15 @@
     .hero::before {
       content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
       background:
-        radial-gradient(ellipse at 20% 50%, rgba(255,184,0,0.06) 0%, transparent 60%),
-        radial-gradient(ellipse at 80% 20%, rgba(0,255,65,0.04) 0%, transparent 50%),
-        radial-gradient(ellipse at 50% 80%, rgba(0,212,255,0.03) 0%, transparent 50%);
+        radial-gradient(ellipse at 20% 50%, rgba(220,38,38,0.05) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 20%, rgba(220,38,38,0.03) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 80%, rgba(220,38,38,0.02) 0%, transparent 50%);
     }
     .hero-grid {
       position: absolute; top: 0; left: 0; right: 0; bottom: 0;
       background-image:
-        linear-gradient(rgba(30,41,59,0.3) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(30,41,59,0.3) 1px, transparent 1px);
+        linear-gradient(rgba(220,38,38,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(220,38,38,0.06) 1px, transparent 1px);
       background-size: 60px 60px;
       mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
     }
@@ -151,7 +151,7 @@
       width: 280px; height: 580px; background: var(--bg-card);
       border: 2px solid var(--border); border-radius: 36px;
       padding: 12px; position: relative; overflow: hidden;
-      box-shadow: 0 40px 80px rgba(0,0,0,0.5), 0 0 60px rgba(255,184,0,0.05);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.12), 0 0 40px rgba(220,38,38,0.06);
     }
     .phone-notch {
       width: 120px; height: 28px; background: var(--bg);

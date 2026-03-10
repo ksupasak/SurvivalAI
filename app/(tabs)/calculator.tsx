@@ -12,8 +12,9 @@ import {
   UIManager,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Spacing, FontSize, BorderRadius } from '@/constants/theme';
-import { t, useLocale, getCategoryName } from '@/services/i18n';
+import { Spacing, FontSize, BorderRadius, type ColorScheme } from '@/constants/theme';
+import { useTheme } from '@/contexts/ThemeContext';
+import { t, useLocale } from '@/services/i18n';
 import {
   calculateSupplies,
   CalculatorInput,
@@ -38,21 +39,21 @@ if (
 const DAY_PRESETS = [3, 7, 14, 30];
 
 const CATEGORY_ICONS: Record<string, IoniconsName> = {
-  Water: 'water-outline',
-  Food: 'fast-food-outline',
-  'First Aid': 'medkit-outline',
-  Hygiene: 'body-outline',
-  Shelter: 'home-outline',
-  Tools: 'construct-outline',
+  water: 'water-outline',
+  food: 'fast-food-outline',
+  first_aid: 'medkit-outline',
+  hygiene: 'body-outline',
+  shelter: 'home-outline',
+  tools: 'construct-outline',
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
-  Water: Colors.blue,
-  Food: Colors.amber,
-  'First Aid': Colors.red,
-  Hygiene: Colors.cyan,
-  Shelter: Colors.green,
-  Tools: Colors.textSecondary,
+  water: Colors.blue,
+  food: Colors.amber,
+  first_aid: Colors.red,
+  hygiene: Colors.cyan,
+  shelter: Colors.green,
+  tools: Colors.textSecondary,
 };
 
 // ─── Stepper Component ──────────────────────────────────────────────────────
@@ -131,10 +132,10 @@ function CategoryCard({
   checkedItems,
   onToggleItem,
 }: CategoryCardProps) {
-  const icon = CATEGORY_ICONS[category.category] || 'cube-outline';
-  const color = CATEGORY_COLORS[category.category] || Colors.textSecondary;
+  const icon = CATEGORY_ICONS[category.key] || 'cube-outline';
+  const color = CATEGORY_COLORS[category.key] || Colors.textSecondary;
   const checkedCount = category.items.filter((_, i) =>
-    checkedItems.has(`${category.category}-${i}`)
+    checkedItems.has(`${category.key}-${i}`)
   ).length;
 
   return (
@@ -147,7 +148,7 @@ function CategoryCard({
         <View style={[styles.categoryIconContainer, { backgroundColor: `${color}15` }]}>
           <Ionicons name={icon} size={20} color={color} />
         </View>
-        <Text style={styles.categoryName}>{getCategoryName(category.category)}</Text>
+        <Text style={styles.categoryName}>{category.category}</Text>
         <View style={styles.categoryBadge}>
           <Text style={styles.categoryBadgeText}>
             {checkedCount}/{category.items.length}
@@ -163,7 +164,7 @@ function CategoryCard({
       {isExpanded && (
         <View style={styles.categoryItems}>
           {category.items.map((item, idx) => {
-            const key = `${category.category}-${idx}`;
+            const key = `${category.key}-${idx}`;
             const isChecked = checkedItems.has(key);
             return (
               <TouchableOpacity
@@ -182,6 +183,7 @@ function CategoryCard({
                     <Ionicons name="checkmark" size={14} color={Colors.bg} />
                   )}
                 </View>
+                <Text style={styles.itemIcon}>{item.icon}</Text>
                 <View style={styles.itemInfo}>
                   <Text
                     style={[
@@ -212,6 +214,7 @@ function CategoryCard({
 
 export default function CalculatorScreen() {
   useLocale(); // Re-render when locale changes
+  const { colors } = useTheme();
 
   const CLIMATE_OPTIONS: { value: Climate; label: string; icon: IoniconsName }[] = [
     { value: 'temperate', label: t('climate_temperate'), icon: 'thermometer-outline' },
@@ -220,10 +223,11 @@ export default function CalculatorScreen() {
   ];
 
   const ACTIVITY_OPTIONS: { value: ActivityLevel; label: string; color: string }[] = [
-    { value: 'low', label: t('activity_low'), color: Colors.green },
-    { value: 'moderate', label: t('activity_moderate'), color: Colors.amber },
-    { value: 'high', label: t('activity_high'), color: Colors.red },
+    { value: 'low', label: t('activity_low'), color: colors.green },
+    { value: 'moderate', label: t('activity_moderate'), color: colors.amber },
+    { value: 'high', label: t('activity_high'), color: colors.red },
   ];
+  const styles = useMemo(() => calcStyles(colors), [colors]);
 
   // Input state
   const [people, setPeople] = useState(2);
@@ -264,7 +268,7 @@ export default function CalculatorScreen() {
     setResult(calcResult);
     setCheckedItems(new Set());
     // Expand all categories by default
-    setExpandedCategories(new Set(calcResult.categories.map((c) => c.category)));
+    setExpandedCategories(new Set(calcResult.categories.map((c) => c.key)));
   }, [people, days, climate, activityLevel]);
 
   const toggleCategory = useCallback((categoryName: string) => {
@@ -534,10 +538,10 @@ export default function CalculatorScreen() {
             {/* Category Cards */}
             {result.categories.map((category) => (
               <CategoryCard
-                key={category.category}
+                key={category.key}
                 category={category}
-                isExpanded={expandedCategories.has(category.category)}
-                onToggle={() => toggleCategory(category.category)}
+                isExpanded={expandedCategories.has(category.key)}
+                onToggle={() => toggleCategory(category.key)}
                 checkedItems={checkedItems}
                 onToggleItem={toggleItem}
               />
@@ -586,10 +590,11 @@ export default function CalculatorScreen() {
 
 // ─── Styles ─────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
+function calcStyles(c: ColorScheme) {
+  return StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.bg,
+    backgroundColor: c.bg,
   },
   scrollView: {
     flex: 1,
@@ -612,30 +617,30 @@ const styles = StyleSheet.create({
   headerAccent: {
     width: 4,
     height: 28,
-    backgroundColor: Colors.amber,
+    backgroundColor: c.amber,
     borderRadius: 2,
     marginRight: Spacing.md,
   },
   headerTitle: {
     fontSize: FontSize.xxxl,
     fontWeight: '800',
-    color: Colors.text,
+    color: c.text,
     letterSpacing: 3,
   },
   headerSubtitle: {
     fontSize: FontSize.md,
-    color: Colors.textSecondary,
+    color: c.textSecondary,
     letterSpacing: 1,
     marginLeft: Spacing.lg + Spacing.xs,
   },
 
   // ── Input Card ──────────────────────────────────────────
   inputCard: {
-    backgroundColor: Colors.bgCard,
+    backgroundColor: c.bgCard,
     borderRadius: BorderRadius.lg,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: c.border,
     marginBottom: Spacing.lg,
   },
   inputCardHeader: {
@@ -647,12 +652,12 @@ const styles = StyleSheet.create({
   inputCardTitle: {
     fontSize: FontSize.xs,
     fontWeight: '700',
-    color: Colors.textSecondary,
+    color: c.textSecondary,
     letterSpacing: 2,
   },
   divider: {
     height: 1,
-    backgroundColor: Colors.border,
+    backgroundColor: c.border,
     marginVertical: Spacing.lg,
   },
 
@@ -663,7 +668,7 @@ const styles = StyleSheet.create({
   stepperLabel: {
     fontSize: FontSize.xs,
     fontWeight: '700',
-    color: Colors.textDim,
+    color: c.textDim,
     letterSpacing: 1.5,
     marginBottom: Spacing.md,
   },
@@ -677,9 +682,9 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: BorderRadius.md,
-    backgroundColor: Colors.bgSecondary,
+    backgroundColor: c.bgSecondary,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
+    borderColor: c.borderLight,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -693,12 +698,12 @@ const styles = StyleSheet.create({
   stepperValue: {
     fontSize: FontSize.xxxl,
     fontWeight: '800',
-    color: Colors.amber,
+    color: c.amber,
     letterSpacing: 1,
   },
   stepperSuffix: {
     fontSize: FontSize.xs,
-    color: Colors.textSecondary,
+    color: c.textSecondary,
     marginTop: 2,
     letterSpacing: 1,
   },
@@ -715,12 +720,12 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.sm,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
-    backgroundColor: Colors.bgSecondary,
+    borderColor: c.borderLight,
+    backgroundColor: c.bgSecondary,
   },
   presetButtonActive: {
-    backgroundColor: Colors.amber,
-    borderColor: Colors.amber,
+    backgroundColor: c.amber,
+    borderColor: c.amber,
   },
   presetButtonWide: {
     paddingHorizontal: Spacing.lg,
@@ -728,11 +733,11 @@ const styles = StyleSheet.create({
   presetText: {
     fontSize: FontSize.sm,
     fontWeight: '600',
-    color: Colors.textSecondary,
+    color: c.textSecondary,
     letterSpacing: 0.5,
   },
   presetTextActive: {
-    color: Colors.bg,
+    color: c.bg,
     fontWeight: '700',
   },
 
@@ -740,7 +745,7 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontSize: FontSize.xs,
     fontWeight: '700',
-    color: Colors.textDim,
+    color: c.textDim,
     letterSpacing: 1.5,
     marginBottom: Spacing.md,
   },
@@ -759,20 +764,20 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
     borderRadius: BorderRadius.full,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
-    backgroundColor: Colors.bgSecondary,
+    borderColor: c.borderLight,
+    backgroundColor: c.bgSecondary,
   },
   pillButtonActive: {
-    backgroundColor: Colors.amber,
-    borderColor: Colors.amber,
+    backgroundColor: c.amber,
+    borderColor: c.amber,
   },
   pillText: {
     fontSize: FontSize.sm,
     fontWeight: '600',
-    color: Colors.textSecondary,
+    color: c.textSecondary,
   },
   pillTextActive: {
-    color: Colors.bg,
+    color: c.bg,
     fontWeight: '700',
   },
 
@@ -782,19 +787,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.md,
-    backgroundColor: Colors.amber,
+    backgroundColor: c.amber,
     paddingVertical: Spacing.lg,
     borderRadius: BorderRadius.lg,
     marginBottom: Spacing.xxl,
   },
   calculateButtonPressed: {
     opacity: 0.85,
-    backgroundColor: Colors.amberDark,
+    backgroundColor: c.amberDark,
   },
   calculateButtonText: {
     fontSize: FontSize.lg,
     fontWeight: '800',
-    color: Colors.bg,
+    color: c.bg,
     letterSpacing: 2,
   },
 
@@ -805,13 +810,13 @@ const styles = StyleSheet.create({
 
   // ── Summary Card ────────────────────────────────────────
   summaryCard: {
-    backgroundColor: Colors.bgCard,
+    backgroundColor: c.bgCard,
     borderRadius: BorderRadius.lg,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: c.border,
     borderTopWidth: 2,
-    borderTopColor: Colors.amber,
+    borderTopColor: c.amber,
   },
   summaryIconRow: {
     flexDirection: 'row',
@@ -822,13 +827,13 @@ const styles = StyleSheet.create({
   summaryTitle: {
     fontSize: FontSize.xs,
     fontWeight: '700',
-    color: Colors.textSecondary,
+    color: c.textSecondary,
     letterSpacing: 2,
   },
   summaryText: {
     fontSize: FontSize.xl,
     fontWeight: '700',
-    color: Colors.text,
+    color: c.text,
     letterSpacing: 0.5,
     textTransform: 'capitalize',
     marginBottom: Spacing.md,
@@ -844,17 +849,17 @@ const styles = StyleSheet.create({
   },
   summaryMetaText: {
     fontSize: FontSize.sm,
-    color: Colors.textSecondary,
+    color: c.textSecondary,
     textTransform: 'capitalize',
   },
 
   // ── Progress Card ───────────────────────────────────────
   progressCard: {
-    backgroundColor: Colors.bgCard,
+    backgroundColor: c.bgCard,
     borderRadius: BorderRadius.lg,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: c.border,
   },
   progressHeader: {
     flexDirection: 'row',
@@ -865,7 +870,7 @@ const styles = StyleSheet.create({
   progressTitle: {
     fontSize: FontSize.xs,
     fontWeight: '700',
-    color: Colors.textSecondary,
+    color: c.textSecondary,
     letterSpacing: 2,
     flex: 1,
   },
@@ -875,7 +880,7 @@ const styles = StyleSheet.create({
   },
   progressBarBg: {
     height: 8,
-    backgroundColor: Colors.bgSecondary,
+    backgroundColor: c.bgSecondary,
     borderRadius: BorderRadius.full,
     overflow: 'hidden',
     marginBottom: Spacing.sm,
@@ -886,17 +891,17 @@ const styles = StyleSheet.create({
   },
   progressPercent: {
     fontSize: FontSize.xs,
-    color: Colors.textDim,
+    color: c.textDim,
     textAlign: 'right',
     letterSpacing: 0.5,
   },
 
   // ── Category Card ───────────────────────────────────────
   categoryCard: {
-    backgroundColor: Colors.bgCard,
+    backgroundColor: c.bgCard,
     borderRadius: BorderRadius.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: c.border,
     borderLeftWidth: 3,
     overflow: 'hidden',
   },
@@ -916,29 +921,29 @@ const styles = StyleSheet.create({
   categoryName: {
     fontSize: FontSize.lg,
     fontWeight: '700',
-    color: Colors.text,
+    color: c.text,
     flex: 1,
     letterSpacing: 0.5,
   },
   categoryBadge: {
-    backgroundColor: Colors.bgSecondary,
+    backgroundColor: c.bgSecondary,
     paddingHorizontal: Spacing.sm,
     paddingVertical: Spacing.xs,
     borderRadius: BorderRadius.full,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
+    borderColor: c.borderLight,
   },
   categoryBadgeText: {
     fontSize: FontSize.xs,
     fontWeight: '700',
-    color: Colors.textSecondary,
+    color: c.textSecondary,
     letterSpacing: 0.5,
   },
 
   // ── Category Items ──────────────────────────────────────
   categoryItems: {
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: c.border,
   },
   supplyItem: {
     flexDirection: 'row',
@@ -946,7 +951,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: c.border,
     gap: Spacing.md,
   },
   checkbox: {
@@ -954,29 +959,34 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: BorderRadius.sm,
     borderWidth: 2,
-    borderColor: Colors.borderLight,
+    borderColor: c.borderLight,
     alignItems: 'center',
     justifyContent: 'center',
   },
   checkboxChecked: {
-    backgroundColor: Colors.green,
-    borderColor: Colors.green,
+    backgroundColor: c.green,
+    borderColor: c.green,
+  },
+  itemIcon: {
+    fontSize: 20,
+    width: 28,
+    textAlign: 'center',
   },
   itemInfo: {
     flex: 1,
   },
   itemName: {
     fontSize: FontSize.md,
-    color: Colors.text,
+    color: c.text,
     fontWeight: '500',
   },
   itemNameChecked: {
-    color: Colors.textDim,
+    color: c.textDim,
     textDecorationLine: 'line-through',
   },
   itemNotes: {
     fontSize: FontSize.xs,
-    color: Colors.textDim,
+    color: c.textDim,
     marginTop: 2,
     lineHeight: 15,
   },
@@ -986,11 +996,11 @@ const styles = StyleSheet.create({
   quantityNumber: {
     fontSize: FontSize.lg,
     fontWeight: '800',
-    color: Colors.amber,
+    color: c.amber,
   },
   quantityUnit: {
     fontSize: FontSize.xs,
-    color: Colors.textSecondary,
+    color: c.textSecondary,
     letterSpacing: 0.5,
   },
 
@@ -1007,17 +1017,17 @@ const styles = StyleSheet.create({
   notesSectionTitle: {
     fontSize: FontSize.xs,
     fontWeight: '700',
-    color: Colors.textSecondary,
+    color: c.textSecondary,
     letterSpacing: 2,
   },
   noteCard: {
     flexDirection: 'row',
-    backgroundColor: Colors.bgCard,
+    backgroundColor: c.bgCard,
     borderRadius: BorderRadius.md,
     padding: Spacing.md,
     marginBottom: Spacing.sm,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: c.border,
     alignItems: 'flex-start',
     gap: Spacing.sm,
   },
@@ -1026,7 +1036,7 @@ const styles = StyleSheet.create({
   },
   noteText: {
     fontSize: FontSize.sm,
-    color: Colors.textSecondary,
+    color: c.textSecondary,
     flex: 1,
     lineHeight: 20,
   },
@@ -1040,14 +1050,15 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.lg,
     borderRadius: BorderRadius.lg,
     borderWidth: 1,
-    borderColor: Colors.amber,
-    backgroundColor: `${Colors.amber}10`,
+    borderColor: c.amber,
+    backgroundColor: `${c.amber}10`,
     marginTop: Spacing.sm,
   },
   exportButtonText: {
     fontSize: FontSize.md,
     fontWeight: '700',
-    color: Colors.amber,
+    color: c.amber,
     letterSpacing: 1.5,
   },
-});
+  });
+}

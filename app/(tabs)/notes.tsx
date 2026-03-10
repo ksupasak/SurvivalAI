@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -14,7 +14,8 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Spacing, FontSize, BorderRadius } from '@/constants/theme';
+import { Spacing, FontSize, BorderRadius, type ColorScheme } from '@/constants/theme';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useLocale, t } from '@/services/i18n';
 import {
   getAllNotes,
@@ -35,12 +36,14 @@ import {
 
 // ─── Priority config ────────────────────────────────────────────────────────
 
-const PRIORITIES: { key: Note['priority']; label: string; color: string }[] = [
-  { key: 'low', label: 'Low', color: Colors.green },
-  { key: 'normal', label: 'Normal', color: Colors.cyan },
-  { key: 'high', label: 'High', color: Colors.amber },
-  { key: 'critical', label: 'Critical', color: Colors.red },
-];
+function getPriorities(c: ColorScheme): { key: Note['priority']; label: string; color: string }[] {
+  return [
+    { key: 'low' as Note['priority'], label: 'Low', color: c.green },
+    { key: 'normal' as Note['priority'], label: 'Normal', color: c.cyan },
+    { key: 'high' as Note['priority'], label: 'High', color: c.amber },
+    { key: 'critical' as Note['priority'], label: 'Critical', color: c.red },
+  ];
+}
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -61,12 +64,12 @@ function formatDate(date: Date): string {
   return date.toLocaleDateString();
 }
 
-function getPriorityColor(priority: Note['priority']): string {
+function getPriorityColor(priority: Note['priority'], c: ColorScheme): string {
   switch (priority) {
-    case 'critical': return Colors.red;
-    case 'high': return Colors.amber;
-    case 'normal': return Colors.cyan;
-    case 'low': return Colors.green;
+    case 'critical': return c.red;
+    case 'high': return c.amber;
+    case 'normal': return c.cyan;
+    case 'low': return c.green;
   }
 }
 
@@ -74,6 +77,9 @@ function getPriorityColor(priority: Note['priority']): string {
 
 export default function NotesScreen() {
   const locale = useLocale();
+  const { colors } = useTheme();
+  const PRIORITIES = useMemo(() => getPriorities(colors), [colors]);
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [notes, setNotes] = useState<Note[]>(getAllNotes());
   const [showEditor, setShowEditor] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
@@ -268,7 +274,7 @@ export default function NotesScreen() {
   // ─── Render note card ────────────────────────────────────────────────
 
   const renderNoteCard = useCallback(({ item }: { item: Note }) => {
-    const priorityColor = getPriorityColor(item.priority);
+    const priorityColor = getPriorityColor(item.priority, colors);
     return (
       <TouchableOpacity
         style={[styles.noteCard, { borderLeftColor: priorityColor }]}
@@ -286,14 +292,14 @@ export default function NotesScreen() {
           <View style={styles.noteCardMeta}>
             {item.images.length > 0 && (
               <View style={styles.imageCountBadge}>
-                <Ionicons name="image" size={10} color={Colors.textSecondary} />
+                <Ionicons name="image" size={10} color={colors.textSecondary} />
                 <Text style={styles.imageCountText}>{item.images.length}</Text>
               </View>
             )}
             {item.synced ? (
-              <Ionicons name="checkmark-circle" size={14} color={Colors.green} />
+              <Ionicons name="checkmark-circle" size={14} color={colors.green} />
             ) : (
-              <Ionicons name="cloud-upload-outline" size={14} color={Colors.textDim} />
+              <Ionicons name="cloud-upload-outline" size={14} color={colors.textDim} />
             )}
           </View>
         </View>
@@ -319,7 +325,7 @@ export default function NotesScreen() {
         </View>
       </TouchableOpacity>
     );
-  }, []);
+  }, [colors, styles]);
 
   // ─── Render ──────────────────────────────────────────────────────────
 
@@ -341,7 +347,7 @@ export default function NotesScreen() {
               <Ionicons
                 name="server-outline"
                 size={18}
-                color={hasS3Config() ? Colors.green : Colors.textSecondary}
+                color={hasS3Config() ? colors.green : colors.textSecondary}
               />
             </TouchableOpacity>
             <TouchableOpacity
@@ -353,7 +359,7 @@ export default function NotesScreen() {
               <Ionicons
                 name={isSyncing ? 'sync' : 'cloud-upload-outline'}
                 size={18}
-                color={unsyncedCount > 0 ? Colors.amber : Colors.textSecondary}
+                color={unsyncedCount > 0 ? colors.amber : colors.textSecondary}
               />
               {unsyncedCount > 0 && (
                 <View style={styles.syncBadge}>
@@ -366,7 +372,7 @@ export default function NotesScreen() {
               onPress={openNewNote}
               activeOpacity={0.7}
             >
-              <Ionicons name="add" size={20} color={Colors.bg} />
+              <Ionicons name="add" size={20} color={colors.bg} />
             </TouchableOpacity>
           </View>
         </View>
@@ -375,7 +381,7 @@ export default function NotesScreen() {
       {/* Notes List */}
       {notes.length === 0 ? (
         <View style={styles.emptyState}>
-          <Ionicons name="document-text-outline" size={64} color={Colors.textDim} />
+          <Ionicons name="document-text-outline" size={64} color={colors.textDim} />
           <Text style={styles.emptyTitle}>No Notes Yet</Text>
           <Text style={styles.emptySubtitle}>
             Start logging your observations, locations, and survival notes
@@ -385,7 +391,7 @@ export default function NotesScreen() {
             onPress={openNewNote}
             activeOpacity={0.7}
           >
-            <Ionicons name="add" size={18} color={Colors.bg} />
+            <Ionicons name="add" size={18} color={colors.bg} />
             <Text style={styles.emptyButtonText}>Create First Note</Text>
           </TouchableOpacity>
         </View>
@@ -414,7 +420,7 @@ export default function NotesScreen() {
                   {editingNote ? 'Edit Note' : 'New Note'}
                 </Text>
                 <TouchableOpacity onPress={() => setShowEditor(false)}>
-                  <Ionicons name="close" size={24} color={Colors.textSecondary} />
+                  <Ionicons name="close" size={24} color={colors.textSecondary} />
                 </TouchableOpacity>
               </View>
 
@@ -424,7 +430,7 @@ export default function NotesScreen() {
                 value={edTitle}
                 onChangeText={setEdTitle}
                 placeholder="Note title..."
-                placeholderTextColor={Colors.textDim}
+                placeholderTextColor={colors.textDim}
                 maxLength={100}
               />
 
@@ -434,7 +440,7 @@ export default function NotesScreen() {
                 value={edContent}
                 onChangeText={setEdContent}
                 placeholder="Write your observations, location details, survival notes..."
-                placeholderTextColor={Colors.textDim}
+                placeholderTextColor={colors.textDim}
                 multiline
                 textAlignVertical="top"
               />
@@ -472,7 +478,7 @@ export default function NotesScreen() {
                 value={edTags}
                 onChangeText={setEdTags}
                 placeholder="water, shelter, location..."
-                placeholderTextColor={Colors.textDim}
+                placeholderTextColor={colors.textDim}
               />
 
               {/* Images */}
@@ -483,7 +489,7 @@ export default function NotesScreen() {
                   onPress={handleCaptureImage}
                   activeOpacity={0.7}
                 >
-                  <Ionicons name="camera" size={20} color={Colors.amber} />
+                  <Ionicons name="camera" size={20} color={colors.amber} />
                   <Text style={styles.captureButtonText}>Capture Photo</Text>
                 </TouchableOpacity>
                 {edImages.length > 0 && (
@@ -491,13 +497,13 @@ export default function NotesScreen() {
                     {edImages.map((uri) => (
                       <View key={uri} style={styles.imageThumbnail}>
                         <View style={styles.imagePlaceholder}>
-                          <Ionicons name="image" size={24} color={Colors.textDim} />
+                          <Ionicons name="image" size={24} color={colors.textDim} />
                         </View>
                         <TouchableOpacity
                           style={styles.imageRemoveButton}
                           onPress={() => handleRemoveImage(uri)}
                         >
-                          <Ionicons name="close-circle" size={20} color={Colors.red} />
+                          <Ionicons name="close-circle" size={20} color={colors.red} />
                         </TouchableOpacity>
                       </View>
                     ))}
@@ -519,7 +525,7 @@ export default function NotesScreen() {
                   onPress={handleSave}
                   activeOpacity={0.7}
                 >
-                  <Ionicons name="checkmark" size={18} color={Colors.bg} />
+                  <Ionicons name="checkmark" size={18} color={colors.bg} />
                   <Text style={styles.saveButtonText}>{t('save') || 'Save'}</Text>
                 </TouchableOpacity>
               </View>
@@ -542,28 +548,28 @@ export default function NotesScreen() {
                 <>
                   <View style={styles.detailHeader}>
                     <TouchableOpacity onPress={() => setShowDetail(false)}>
-                      <Ionicons name="arrow-back" size={24} color={Colors.textSecondary} />
+                      <Ionicons name="arrow-back" size={24} color={colors.textSecondary} />
                     </TouchableOpacity>
                     <View style={styles.detailHeaderActions}>
                       <TouchableOpacity
                         onPress={() => openEditNote(selectedNote)}
                         style={styles.detailAction}
                       >
-                        <Ionicons name="create-outline" size={20} color={Colors.amber} />
+                        <Ionicons name="create-outline" size={20} color={colors.amber} />
                       </TouchableOpacity>
                       <TouchableOpacity
                         onPress={() => handleDelete(selectedNote.id)}
                         style={styles.detailAction}
                       >
-                        <Ionicons name="trash-outline" size={20} color={Colors.red} />
+                        <Ionicons name="trash-outline" size={20} color={colors.red} />
                       </TouchableOpacity>
                     </View>
                   </View>
 
                   <View style={styles.detailMeta}>
-                    <View style={[styles.detailPriority, { backgroundColor: `${getPriorityColor(selectedNote.priority)}20` }]}>
-                      <View style={[styles.priorityPillDot, { backgroundColor: getPriorityColor(selectedNote.priority) }]} />
-                      <Text style={[styles.detailPriorityText, { color: getPriorityColor(selectedNote.priority) }]}>
+                    <View style={[styles.detailPriority, { backgroundColor: `${getPriorityColor(selectedNote.priority, colors)}20` }]}>
+                      <View style={[styles.priorityPillDot, { backgroundColor: getPriorityColor(selectedNote.priority, colors) }]} />
+                      <Text style={[styles.detailPriorityText, { color: getPriorityColor(selectedNote.priority, colors) }]}>
                         {selectedNote.priority.toUpperCase()}
                       </Text>
                     </View>
@@ -594,7 +600,7 @@ export default function NotesScreen() {
                       {selectedNote.images.map((img) => (
                         <View key={img.id} style={styles.detailImageCard}>
                           <View style={styles.detailImagePlaceholder}>
-                            <Ionicons name="image" size={32} color={Colors.textDim} />
+                            <Ionicons name="image" size={32} color={colors.textDim} />
                             <Text style={styles.detailImageUri}>{img.uri}</Text>
                           </View>
                           <View style={styles.detailImageMeta}>
@@ -602,9 +608,9 @@ export default function NotesScreen() {
                               {img.timestamp.toLocaleString()}
                             </Text>
                             {img.synced ? (
-                              <Ionicons name="checkmark-circle" size={14} color={Colors.green} />
+                              <Ionicons name="checkmark-circle" size={14} color={colors.green} />
                             ) : (
-                              <Ionicons name="cloud-upload-outline" size={14} color={Colors.textDim} />
+                              <Ionicons name="cloud-upload-outline" size={14} color={colors.textDim} />
                             )}
                           </View>
                         </View>
@@ -615,15 +621,15 @@ export default function NotesScreen() {
                   <View style={styles.detailSyncStatus}>
                     {selectedNote.synced ? (
                       <View style={styles.syncStatusRow}>
-                        <Ionicons name="checkmark-circle" size={16} color={Colors.green} />
-                        <Text style={[styles.syncStatusText, { color: Colors.green }]}>
+                        <Ionicons name="checkmark-circle" size={16} color={colors.green} />
+                        <Text style={[styles.syncStatusText, { color: colors.green }]}>
                           Synced {selectedNote.syncedAt?.toLocaleString()}
                         </Text>
                       </View>
                     ) : (
                       <View style={styles.syncStatusRow}>
-                        <Ionicons name="cloud-upload-outline" size={16} color={Colors.textDim} />
-                        <Text style={[styles.syncStatusText, { color: Colors.textDim }]}>
+                        <Ionicons name="cloud-upload-outline" size={16} color={colors.textDim} />
+                        <Text style={[styles.syncStatusText, { color: colors.textDim }]}>
                           Not synced
                         </Text>
                       </View>
@@ -652,7 +658,7 @@ export default function NotesScreen() {
                   <Text style={styles.s3Subtitle}>S3-compatible storage</Text>
                 </View>
                 <TouchableOpacity onPress={() => setShowS3Config(false)}>
-                  <Ionicons name="close" size={24} color={Colors.textSecondary} />
+                  <Ionicons name="close" size={24} color={colors.textSecondary} />
                 </TouchableOpacity>
               </View>
 
@@ -662,7 +668,7 @@ export default function NotesScreen() {
                 value={s3Endpoint}
                 onChangeText={setS3Endpoint}
                 placeholder="https://s3.amazonaws.com"
-                placeholderTextColor={Colors.textDim}
+                placeholderTextColor={colors.textDim}
                 autoCapitalize="none"
                 autoCorrect={false}
               />
@@ -673,7 +679,7 @@ export default function NotesScreen() {
                 value={s3Bucket}
                 onChangeText={setS3Bucket}
                 placeholder="my-survival-notes"
-                placeholderTextColor={Colors.textDim}
+                placeholderTextColor={colors.textDim}
                 autoCapitalize="none"
                 autoCorrect={false}
               />
@@ -684,7 +690,7 @@ export default function NotesScreen() {
                 value={s3Region}
                 onChangeText={setS3Region}
                 placeholder="us-east-1"
-                placeholderTextColor={Colors.textDim}
+                placeholderTextColor={colors.textDim}
                 autoCapitalize="none"
                 autoCorrect={false}
               />
@@ -695,7 +701,7 @@ export default function NotesScreen() {
                 value={s3AccessKey}
                 onChangeText={setS3AccessKey}
                 placeholder="AKIAIOSFODNN7EXAMPLE"
-                placeholderTextColor={Colors.textDim}
+                placeholderTextColor={colors.textDim}
                 autoCapitalize="none"
                 autoCorrect={false}
               />
@@ -706,7 +712,7 @@ export default function NotesScreen() {
                 value={s3SecretKey}
                 onChangeText={setS3SecretKey}
                 placeholder="wJalrXUtnFEMI/K7MDENG..."
-                placeholderTextColor={Colors.textDim}
+                placeholderTextColor={colors.textDim}
                 secureTextEntry
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -730,7 +736,7 @@ export default function NotesScreen() {
                   onPress={handleSaveS3}
                   activeOpacity={0.7}
                 >
-                  <Ionicons name="checkmark" size={18} color={Colors.bg} />
+                  <Ionicons name="checkmark" size={18} color={colors.bg} />
                   <Text style={styles.saveButtonText}>{t('save') || 'Save'}</Text>
                 </TouchableOpacity>
               </View>
@@ -744,545 +750,547 @@ export default function NotesScreen() {
 
 // ─── Styles ─────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: Colors.bg,
-  },
+function createStyles(c: ColorScheme) {
+  return StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: c.bg,
+    },
 
-  // Header
-  header: {
-    paddingHorizontal: Spacing.xl,
-    paddingTop: Spacing.lg,
-    paddingBottom: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  headerTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  headerTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  headerAccent: {
-    width: 3,
-    height: 22,
-    backgroundColor: Colors.amber,
-    borderRadius: 2,
-    marginRight: Spacing.sm,
-  },
-  headerTitle: {
-    fontSize: FontSize.xl,
-    fontWeight: '800',
-    color: Colors.text,
-    letterSpacing: 3,
-  },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  headerButton: {
-    width: 36,
-    height: 36,
-    borderRadius: BorderRadius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.bgCard,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  addButton: {
-    backgroundColor: Colors.amber,
-    borderColor: Colors.amber,
-  },
-  syncBadge: {
-    position: 'absolute',
-    top: -4,
-    right: -4,
-    backgroundColor: Colors.red,
-    borderRadius: 8,
-    width: 16,
-    height: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  syncBadgeText: {
-    fontSize: 9,
-    fontWeight: '700',
-    color: Colors.text,
-  },
+    // Header
+    header: {
+      paddingHorizontal: Spacing.xl,
+      paddingTop: Spacing.lg,
+      paddingBottom: Spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: c.border,
+    },
+    headerTop: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    headerTitleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    headerAccent: {
+      width: 3,
+      height: 22,
+      backgroundColor: c.amber,
+      borderRadius: 2,
+      marginRight: Spacing.sm,
+    },
+    headerTitle: {
+      fontSize: FontSize.xl,
+      fontWeight: '800',
+      color: c.text,
+      letterSpacing: 3,
+    },
+    headerActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.xs,
+    },
+    headerButton: {
+      width: 36,
+      height: 36,
+      borderRadius: BorderRadius.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: c.bgCard,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    addButton: {
+      backgroundColor: c.amber,
+      borderColor: c.amber,
+    },
+    syncBadge: {
+      position: 'absolute',
+      top: -4,
+      right: -4,
+      backgroundColor: c.red,
+      borderRadius: 8,
+      width: 16,
+      height: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    syncBadgeText: {
+      fontSize: 9,
+      fontWeight: '700',
+      color: c.text,
+    },
 
-  // Notes list
-  notesList: {
-    padding: Spacing.xl,
-    gap: Spacing.md,
-  },
-  noteCard: {
-    backgroundColor: Colors.bgCard,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderLeftWidth: 3,
-  },
-  noteCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: Spacing.sm,
-    gap: Spacing.sm,
-  },
-  priorityDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  noteCardTitle: {
-    flex: 1,
-    fontSize: FontSize.md,
-    fontWeight: '700',
-    color: Colors.text,
-  },
-  noteCardMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  imageCountBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
-  },
-  imageCountText: {
-    fontSize: FontSize.xs,
-    color: Colors.textSecondary,
-  },
-  noteCardContent: {
-    fontSize: FontSize.sm,
-    color: Colors.textSecondary,
-    lineHeight: 18,
-    marginBottom: Spacing.sm,
-  },
-  noteCardFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  noteCardTime: {
-    fontSize: FontSize.xs,
-    color: Colors.textDim,
-  },
-  tagRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  tagChip: {
-    backgroundColor: `${Colors.amber}15`,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 1,
-    borderRadius: BorderRadius.sm,
-  },
-  tagChipText: {
-    fontSize: 9,
-    color: Colors.amber,
-    fontWeight: '600',
-  },
-  moreTagsText: {
-    fontSize: 9,
-    color: Colors.textDim,
-  },
+    // Notes list
+    notesList: {
+      padding: Spacing.xl,
+      gap: Spacing.md,
+    },
+    noteCard: {
+      backgroundColor: c.bgCard,
+      borderRadius: BorderRadius.lg,
+      padding: Spacing.lg,
+      borderWidth: 1,
+      borderColor: c.border,
+      borderLeftWidth: 3,
+    },
+    noteCardHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: Spacing.sm,
+      gap: Spacing.sm,
+    },
+    priorityDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+    },
+    noteCardTitle: {
+      flex: 1,
+      fontSize: FontSize.md,
+      fontWeight: '700',
+      color: c.text,
+    },
+    noteCardMeta: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.sm,
+    },
+    imageCountBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 2,
+    },
+    imageCountText: {
+      fontSize: FontSize.xs,
+      color: c.textSecondary,
+    },
+    noteCardContent: {
+      fontSize: FontSize.sm,
+      color: c.textSecondary,
+      lineHeight: 18,
+      marginBottom: Spacing.sm,
+    },
+    noteCardFooter: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    noteCardTime: {
+      fontSize: FontSize.xs,
+      color: c.textDim,
+    },
+    tagRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.xs,
+    },
+    tagChip: {
+      backgroundColor: `${c.amber}15`,
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: 1,
+      borderRadius: BorderRadius.sm,
+    },
+    tagChipText: {
+      fontSize: 9,
+      color: c.amber,
+      fontWeight: '600',
+    },
+    moreTagsText: {
+      fontSize: 9,
+      color: c.textDim,
+    },
 
-  // Empty state
-  emptyState: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: Spacing.xxxl,
-    gap: Spacing.md,
-  },
-  emptyTitle: {
-    fontSize: FontSize.xl,
-    fontWeight: '700',
-    color: Colors.text,
-    marginTop: Spacing.md,
-  },
-  emptySubtitle: {
-    fontSize: FontSize.md,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  emptyButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    backgroundColor: Colors.amber,
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.full,
-    marginTop: Spacing.lg,
-  },
-  emptyButtonText: {
-    fontSize: FontSize.md,
-    fontWeight: '700',
-    color: Colors.bg,
-  },
+    // Empty state
+    emptyState: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: Spacing.xxxl,
+      gap: Spacing.md,
+    },
+    emptyTitle: {
+      fontSize: FontSize.xl,
+      fontWeight: '700',
+      color: c.text,
+      marginTop: Spacing.md,
+    },
+    emptySubtitle: {
+      fontSize: FontSize.md,
+      color: c.textSecondary,
+      textAlign: 'center',
+      lineHeight: 22,
+    },
+    emptyButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.sm,
+      backgroundColor: c.amber,
+      paddingHorizontal: Spacing.xl,
+      paddingVertical: Spacing.md,
+      borderRadius: BorderRadius.full,
+      marginTop: Spacing.lg,
+    },
+    emptyButtonText: {
+      fontSize: FontSize.md,
+      fontWeight: '700',
+      color: c.bg,
+    },
 
-  // Modal
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'flex-end',
-  },
-  editorModal: {
-    backgroundColor: Colors.bg,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingHorizontal: Spacing.xl,
-    paddingTop: Spacing.lg,
-    paddingBottom: Spacing.xl + 20,
-    maxHeight: '90%',
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-  },
-  detailModal: {
-    backgroundColor: Colors.bg,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingHorizontal: Spacing.xl,
-    paddingTop: Spacing.lg,
-    paddingBottom: Spacing.xl + 20,
-    maxHeight: '95%',
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-  },
-  s3Modal: {
-    backgroundColor: Colors.bg,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingHorizontal: Spacing.xl,
-    paddingTop: Spacing.lg,
-    paddingBottom: Spacing.xl + 20,
-    maxHeight: '85%',
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-  },
-  editorHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: Spacing.xl,
-  },
-  editorTitle: {
-    fontSize: FontSize.xl,
-    fontWeight: '800',
-    color: Colors.text,
-    letterSpacing: 2,
-  },
-  s3Subtitle: {
-    fontSize: FontSize.sm,
-    color: Colors.textSecondary,
-    marginTop: 2,
-  },
-  editorLabel: {
-    fontSize: FontSize.sm,
-    fontWeight: '700',
-    color: Colors.textSecondary,
-    letterSpacing: 1,
-    marginBottom: Spacing.sm,
-    marginTop: Spacing.md,
-  },
-  editorTitleInput: {
-    backgroundColor: Colors.bgCard,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.md,
-    color: Colors.text,
-    fontSize: FontSize.lg,
-    fontWeight: '700',
-  },
-  editorContentInput: {
-    backgroundColor: Colors.bgCard,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.md,
-    color: Colors.text,
-    fontSize: FontSize.md,
-    minHeight: 120,
-    marginTop: Spacing.md,
-    lineHeight: 22,
-  },
-  priorityRow: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-  },
-  priorityPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.full,
-    backgroundColor: Colors.bgCard,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  priorityPillDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  priorityPillText: {
-    fontSize: FontSize.xs,
-    fontWeight: '600',
-    color: Colors.textSecondary,
-  },
-  editorTagsInput: {
-    backgroundColor: Colors.bgCard,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.md,
-    color: Colors.text,
-    fontSize: FontSize.md,
-  },
-  imagesSection: {
-    marginTop: Spacing.md,
-  },
-  captureButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.md,
-    backgroundColor: `${Colors.amber}15`,
-    borderWidth: 1,
-    borderColor: `${Colors.amber}30`,
-    borderStyle: 'dashed',
-  },
-  captureButtonText: {
-    fontSize: FontSize.md,
-    fontWeight: '600',
-    color: Colors.amber,
-  },
-  imageGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.sm,
-    marginTop: Spacing.md,
-  },
-  imageThumbnail: {
-    width: 72,
-    height: 72,
-    borderRadius: BorderRadius.md,
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  imagePlaceholder: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: Colors.bgCard,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: BorderRadius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  imageRemoveButton: {
-    position: 'absolute',
-    top: -4,
-    right: -4,
-  },
-  editorActions: {
-    flexDirection: 'row',
-    gap: Spacing.md,
-    marginTop: Spacing.xl,
-  },
-  cancelButton: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.md,
-    backgroundColor: Colors.bgCard,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  cancelButtonText: {
-    fontSize: FontSize.md,
-    fontWeight: '700',
-    color: Colors.textSecondary,
-  },
-  saveButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.sm,
-    paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.md,
-    backgroundColor: Colors.amber,
-  },
-  saveButtonText: {
-    fontSize: FontSize.md,
-    fontWeight: '700',
-    color: Colors.bg,
-  },
-  s3Input: {
-    backgroundColor: Colors.bgCard,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.md,
-    color: Colors.text,
-    fontSize: FontSize.md,
-  },
-  s3Note: {
-    fontSize: FontSize.xs,
-    color: Colors.textDim,
-    lineHeight: 16,
-    fontStyle: 'italic',
-    marginTop: Spacing.lg,
-  },
+    // Modal
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      justifyContent: 'flex-end',
+    },
+    editorModal: {
+      backgroundColor: c.bg,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      paddingHorizontal: Spacing.xl,
+      paddingTop: Spacing.lg,
+      paddingBottom: Spacing.xl + 20,
+      maxHeight: '90%',
+      borderTopWidth: 1,
+      borderTopColor: c.border,
+    },
+    detailModal: {
+      backgroundColor: c.bg,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      paddingHorizontal: Spacing.xl,
+      paddingTop: Spacing.lg,
+      paddingBottom: Spacing.xl + 20,
+      maxHeight: '95%',
+      borderTopWidth: 1,
+      borderTopColor: c.border,
+    },
+    s3Modal: {
+      backgroundColor: c.bg,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      paddingHorizontal: Spacing.xl,
+      paddingTop: Spacing.lg,
+      paddingBottom: Spacing.xl + 20,
+      maxHeight: '85%',
+      borderTopWidth: 1,
+      borderTopColor: c.border,
+    },
+    editorHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: Spacing.xl,
+    },
+    editorTitle: {
+      fontSize: FontSize.xl,
+      fontWeight: '800',
+      color: c.text,
+      letterSpacing: 2,
+    },
+    s3Subtitle: {
+      fontSize: FontSize.sm,
+      color: c.textSecondary,
+      marginTop: 2,
+    },
+    editorLabel: {
+      fontSize: FontSize.sm,
+      fontWeight: '700',
+      color: c.textSecondary,
+      letterSpacing: 1,
+      marginBottom: Spacing.sm,
+      marginTop: Spacing.md,
+    },
+    editorTitleInput: {
+      backgroundColor: c.bgCard,
+      borderRadius: BorderRadius.md,
+      borderWidth: 1,
+      borderColor: c.border,
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.md,
+      color: c.text,
+      fontSize: FontSize.lg,
+      fontWeight: '700',
+    },
+    editorContentInput: {
+      backgroundColor: c.bgCard,
+      borderRadius: BorderRadius.md,
+      borderWidth: 1,
+      borderColor: c.border,
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.md,
+      color: c.text,
+      fontSize: FontSize.md,
+      minHeight: 120,
+      marginTop: Spacing.md,
+      lineHeight: 22,
+    },
+    priorityRow: {
+      flexDirection: 'row',
+      gap: Spacing.sm,
+    },
+    priorityPill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.xs,
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.sm,
+      borderRadius: BorderRadius.full,
+      backgroundColor: c.bgCard,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    priorityPillDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+    },
+    priorityPillText: {
+      fontSize: FontSize.xs,
+      fontWeight: '600',
+      color: c.textSecondary,
+    },
+    editorTagsInput: {
+      backgroundColor: c.bgCard,
+      borderRadius: BorderRadius.md,
+      borderWidth: 1,
+      borderColor: c.border,
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.md,
+      color: c.text,
+      fontSize: FontSize.md,
+    },
+    imagesSection: {
+      marginTop: Spacing.md,
+    },
+    captureButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.sm,
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.md,
+      borderRadius: BorderRadius.md,
+      backgroundColor: `${c.amber}15`,
+      borderWidth: 1,
+      borderColor: `${c.amber}30`,
+      borderStyle: 'dashed',
+    },
+    captureButtonText: {
+      fontSize: FontSize.md,
+      fontWeight: '600',
+      color: c.amber,
+    },
+    imageGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: Spacing.sm,
+      marginTop: Spacing.md,
+    },
+    imageThumbnail: {
+      width: 72,
+      height: 72,
+      borderRadius: BorderRadius.md,
+      overflow: 'hidden',
+      position: 'relative',
+    },
+    imagePlaceholder: {
+      width: '100%',
+      height: '100%',
+      backgroundColor: c.bgCard,
+      borderWidth: 1,
+      borderColor: c.border,
+      borderRadius: BorderRadius.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    imageRemoveButton: {
+      position: 'absolute',
+      top: -4,
+      right: -4,
+    },
+    editorActions: {
+      flexDirection: 'row',
+      gap: Spacing.md,
+      marginTop: Spacing.xl,
+    },
+    cancelButton: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: Spacing.md,
+      borderRadius: BorderRadius.md,
+      backgroundColor: c.bgCard,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    cancelButtonText: {
+      fontSize: FontSize.md,
+      fontWeight: '700',
+      color: c.textSecondary,
+    },
+    saveButton: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: Spacing.sm,
+      paddingVertical: Spacing.md,
+      borderRadius: BorderRadius.md,
+      backgroundColor: c.amber,
+    },
+    saveButtonText: {
+      fontSize: FontSize.md,
+      fontWeight: '700',
+      color: c.bg,
+    },
+    s3Input: {
+      backgroundColor: c.bgCard,
+      borderRadius: BorderRadius.md,
+      borderWidth: 1,
+      borderColor: c.border,
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.md,
+      color: c.text,
+      fontSize: FontSize.md,
+    },
+    s3Note: {
+      fontSize: FontSize.xs,
+      color: c.textDim,
+      lineHeight: 16,
+      fontStyle: 'italic',
+      marginTop: Spacing.lg,
+    },
 
-  // Detail view
-  detailHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: Spacing.lg,
-  },
-  detailHeaderActions: {
-    flexDirection: 'row',
-    gap: Spacing.md,
-  },
-  detailAction: {
-    width: 36,
-    height: 36,
-    borderRadius: BorderRadius.md,
-    backgroundColor: Colors.bgCard,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  detailMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    marginBottom: Spacing.md,
-  },
-  detailPriority: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.full,
-  },
-  detailPriorityText: {
-    fontSize: FontSize.xs,
-    fontWeight: '700',
-    letterSpacing: 1,
-  },
-  detailDate: {
-    fontSize: FontSize.sm,
-    color: Colors.textDim,
-  },
-  detailTitle: {
-    fontSize: FontSize.title,
-    fontWeight: '800',
-    color: Colors.text,
-    marginBottom: Spacing.md,
-  },
-  detailTags: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.sm,
-    marginBottom: Spacing.lg,
-  },
-  detailTag: {
-    backgroundColor: `${Colors.amber}15`,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.full,
-  },
-  detailTagText: {
-    fontSize: FontSize.sm,
-    color: Colors.amber,
-    fontWeight: '600',
-  },
-  detailContent: {
-    fontSize: FontSize.md,
-    color: Colors.text,
-    lineHeight: 24,
-    marginBottom: Spacing.xl,
-  },
-  detailImages: {
-    marginBottom: Spacing.xl,
-  },
-  detailImagesTitle: {
-    fontSize: FontSize.sm,
-    fontWeight: '700',
-    color: Colors.textSecondary,
-    letterSpacing: 1,
-    marginBottom: Spacing.md,
-  },
-  detailImageCard: {
-    backgroundColor: Colors.bgCard,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    marginBottom: Spacing.sm,
-    overflow: 'hidden',
-  },
-  detailImagePlaceholder: {
-    height: 120,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.sm,
-  },
-  detailImageUri: {
-    fontSize: FontSize.xs,
-    color: Colors.textDim,
-    maxWidth: '80%',
-  },
-  detailImageMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-  },
-  detailImageDate: {
-    fontSize: FontSize.xs,
-    color: Colors.textDim,
-  },
-  detailSyncStatus: {
-    paddingTop: Spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-  },
-  syncStatusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  syncStatusText: {
-    fontSize: FontSize.sm,
-    fontWeight: '600',
-  },
-});
+    // Detail view
+    detailHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: Spacing.lg,
+    },
+    detailHeaderActions: {
+      flexDirection: 'row',
+      gap: Spacing.md,
+    },
+    detailAction: {
+      width: 36,
+      height: 36,
+      borderRadius: BorderRadius.md,
+      backgroundColor: c.bgCard,
+      borderWidth: 1,
+      borderColor: c.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    detailMeta: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.md,
+      marginBottom: Spacing.md,
+    },
+    detailPriority: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.xs,
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.xs,
+      borderRadius: BorderRadius.full,
+    },
+    detailPriorityText: {
+      fontSize: FontSize.xs,
+      fontWeight: '700',
+      letterSpacing: 1,
+    },
+    detailDate: {
+      fontSize: FontSize.sm,
+      color: c.textDim,
+    },
+    detailTitle: {
+      fontSize: FontSize.title,
+      fontWeight: '800',
+      color: c.text,
+      marginBottom: Spacing.md,
+    },
+    detailTags: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: Spacing.sm,
+      marginBottom: Spacing.lg,
+    },
+    detailTag: {
+      backgroundColor: `${c.amber}15`,
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.xs,
+      borderRadius: BorderRadius.full,
+    },
+    detailTagText: {
+      fontSize: FontSize.sm,
+      color: c.amber,
+      fontWeight: '600',
+    },
+    detailContent: {
+      fontSize: FontSize.md,
+      color: c.text,
+      lineHeight: 24,
+      marginBottom: Spacing.xl,
+    },
+    detailImages: {
+      marginBottom: Spacing.xl,
+    },
+    detailImagesTitle: {
+      fontSize: FontSize.sm,
+      fontWeight: '700',
+      color: c.textSecondary,
+      letterSpacing: 1,
+      marginBottom: Spacing.md,
+    },
+    detailImageCard: {
+      backgroundColor: c.bgCard,
+      borderRadius: BorderRadius.md,
+      borderWidth: 1,
+      borderColor: c.border,
+      marginBottom: Spacing.sm,
+      overflow: 'hidden',
+    },
+    detailImagePlaceholder: {
+      height: 120,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: Spacing.sm,
+    },
+    detailImageUri: {
+      fontSize: FontSize.xs,
+      color: c.textDim,
+      maxWidth: '80%',
+    },
+    detailImageMeta: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.sm,
+      borderTopWidth: 1,
+      borderTopColor: c.border,
+    },
+    detailImageDate: {
+      fontSize: FontSize.xs,
+      color: c.textDim,
+    },
+    detailSyncStatus: {
+      paddingTop: Spacing.lg,
+      borderTopWidth: 1,
+      borderTopColor: c.border,
+    },
+    syncStatusRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.sm,
+    },
+    syncStatusText: {
+      fontSize: FontSize.sm,
+      fontWeight: '600',
+    },
+  });
+}

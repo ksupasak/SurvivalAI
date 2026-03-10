@@ -4,7 +4,10 @@
  * Calculates recommended emergency supplies based on group size,
  * duration, climate conditions, and activity level. Uses established
  * emergency preparedness guidelines (FEMA, Red Cross) as baselines.
+ * All water quantities are in liters (~4 L/person/day base).
  */
+
+import { t, tFormat } from '@/services/i18n';
 
 export type Climate = 'temperate' | 'hot' | 'cold';
 export type ActivityLevel = 'low' | 'moderate' | 'high';
@@ -23,6 +26,8 @@ export type CalculatorInput = {
 export type SupplyItem = {
   /** Name of the supply item */
   name: string;
+  /** Emoji icon for visual recognition */
+  icon: string;
   /** Recommended quantity */
   quantity: number;
   /** Unit of measurement */
@@ -32,7 +37,9 @@ export type SupplyItem = {
 };
 
 export type SupplyCategory = {
-  /** Category name */
+  /** Category key (untranslated identifier for lookups) */
+  key: string;
+  /** Category name (translated for display) */
   category: string;
   /** List of items in this category */
   items: SupplyItem[];
@@ -88,96 +95,105 @@ function getActivityCalorieMultiplier(activityLevel: ActivityLevel): number {
 // ─── Category Calculators ───────────────────────────────────────────────────
 
 function calculateWater(input: CalculatorInput): SupplyCategory {
-  const baseGallonsPerPersonPerDay = 1; // FEMA standard
+  const baseLitersPerPersonPerDay = 4; // ~1 gallon ≈ 3.785L, rounded up
   const climateMultiplier = getClimateWaterMultiplier(input.climate);
   const activityMultiplier = getActivityWaterMultiplier(input.activityLevel);
 
-  const dailyPerPerson = baseGallonsPerPersonPerDay * climateMultiplier * activityMultiplier;
-  const totalGallons = dailyPerPerson * input.people * input.days;
+  const dailyPerPerson = baseLitersPerPersonPerDay * climateMultiplier * activityMultiplier;
+  const totalLiters = dailyPerPerson * input.people * input.days;
 
   const items: SupplyItem[] = [
     {
-      name: 'Drinking water',
-      quantity: Math.ceil(totalGallons * 0.75),
-      unit: 'gallons',
-      notes: `${(dailyPerPerson * 0.75).toFixed(1)} gal/person/day for drinking`,
+      name: t('item_water_drinking'),
+      icon: '💧',
+      quantity: Math.ceil(totalLiters * 0.75),
+      unit: t('unit_liters'),
+      notes: tFormat('note_water_drinking', { liters: (dailyPerPerson * 0.75).toFixed(1) }),
     },
     {
-      name: 'Sanitation/cooking water',
-      quantity: Math.ceil(totalGallons * 0.25),
-      unit: 'gallons',
-      notes: 'For hygiene, cooking, and cleaning',
+      name: t('item_water_sanitation'),
+      icon: '🚿',
+      quantity: Math.ceil(totalLiters * 0.25),
+      unit: t('unit_liters'),
+      notes: t('note_water_sanitation'),
     },
     {
-      name: 'Water purification tablets',
+      name: t('item_water_purif_tabs'),
+      icon: '💊',
       quantity: Math.ceil(input.people * input.days * 2),
-      unit: 'tablets',
-      notes: 'Backup purification, 2 per person per day',
+      unit: t('unit_tablets'),
+      notes: t('note_water_purif_tabs'),
     },
     {
-      name: 'Portable water filter',
+      name: t('item_water_filter'),
+      icon: '🔍',
       quantity: Math.max(1, Math.ceil(input.people / 4)),
-      unit: 'filters',
-      notes: 'Gravity or pump filter for natural water sources',
+      unit: t('unit_filters'),
+      notes: t('note_water_filter'),
     },
   ];
 
-  return { category: 'Water', items };
+  return { key: 'water', category: t('cat_water'), items };
 }
 
 function calculateFood(input: CalculatorInput): SupplyCategory {
   const baseCalories = 2000;
   const calorieMultiplier = getActivityCalorieMultiplier(input.activityLevel);
   const dailyCalories = baseCalories * calorieMultiplier;
-  const totalCalories = dailyCalories * input.people * input.days;
 
-  // Calculate specific food items scaled to needs
   const items: SupplyItem[] = [
     {
-      name: 'Freeze-dried meals',
+      name: t('item_food_freeze_dried'),
+      icon: '🍱',
       quantity: Math.ceil(input.people * input.days * 2),
-      unit: 'pouches',
-      notes: `~250 cal each, for main meals (${dailyCalories.toFixed(0)} cal/person/day target)`,
+      unit: t('unit_pouches'),
+      notes: tFormat('note_food_freeze_dried', { cal: dailyCalories.toFixed(0) }),
     },
     {
-      name: 'Energy/granola bars',
+      name: t('item_food_energy_bars'),
+      icon: '🍫',
       quantity: Math.ceil(input.people * input.days * 3),
-      unit: 'bars',
-      notes: '~200 cal each, for snacks and quick energy',
+      unit: t('unit_bars'),
+      notes: t('note_food_energy_bars'),
     },
     {
-      name: 'Canned goods (meat, beans, vegetables)',
+      name: t('item_food_canned'),
+      icon: '🥫',
       quantity: Math.ceil(input.people * input.days * 1.5),
-      unit: 'cans',
-      notes: '~300 cal each, shelf-stable protein and nutrients',
+      unit: t('unit_cans'),
+      notes: t('note_food_canned'),
     },
     {
-      name: 'Peanut butter',
+      name: t('item_food_peanut_butter'),
+      icon: '🥜',
       quantity: Math.ceil((input.people * input.days) / 7),
-      unit: 'jars (16oz)',
-      notes: 'High calorie density, ~190 cal per serving',
+      unit: t('unit_jars_16oz'),
+      notes: t('note_food_peanut_butter'),
     },
     {
-      name: 'Dried fruit and nuts',
+      name: t('item_food_dried_fruit'),
+      icon: '🍇',
       quantity: Math.ceil((input.people * input.days) / 3),
-      unit: 'bags (1lb)',
-      notes: 'Calorie-dense, no preparation needed',
+      unit: t('unit_bags_1lb'),
+      notes: t('note_food_dried_fruit'),
     },
     {
-      name: 'Crackers or hardtack',
+      name: t('item_food_crackers'),
+      icon: '🍘',
       quantity: Math.ceil((input.people * input.days) / 5),
-      unit: 'boxes',
-      notes: 'Long shelf life, carbohydrate source',
+      unit: t('unit_boxes'),
+      notes: t('note_food_crackers'),
     },
     {
-      name: 'Electrolyte drink mix',
+      name: t('item_food_electrolyte'),
+      icon: '🥤',
       quantity: Math.ceil(input.people * input.days),
-      unit: 'packets',
-      notes: 'Replace salts lost through perspiration',
+      unit: t('unit_packets'),
+      notes: t('note_food_electrolyte'),
     },
   ];
 
-  return { category: 'Food', items };
+  return { key: 'food', category: t('cat_food'), items };
 }
 
 function calculateFirstAid(input: CalculatorInput): SupplyCategory {
@@ -185,135 +201,155 @@ function calculateFirstAid(input: CalculatorInput): SupplyCategory {
 
   const items: SupplyItem[] = [
     {
-      name: 'Adhesive bandages (assorted)',
+      name: t('item_fa_bandages'),
+      icon: '🩹',
       quantity: 25 * scaleFactor,
-      unit: 'pieces',
-      notes: 'Various sizes for cuts and blisters',
+      unit: t('unit_pieces'),
+      notes: t('note_fa_bandages'),
     },
     {
-      name: 'Sterile gauze pads (4x4)',
+      name: t('item_fa_gauze_pads'),
+      icon: '⬜',
       quantity: 12 * scaleFactor,
-      unit: 'pads',
-      notes: 'For wound dressing',
+      unit: t('unit_pads'),
+      notes: t('note_fa_gauze_pads'),
     },
     {
-      name: 'Gauze roll',
+      name: t('item_fa_gauze_roll'),
+      icon: '🩹',
       quantity: 2 * scaleFactor,
-      unit: 'rolls',
-      notes: 'For wrapping wounds and sprains',
+      unit: t('unit_rolls'),
+      notes: t('note_fa_gauze_roll'),
     },
     {
-      name: 'Medical tape',
+      name: t('item_fa_medical_tape'),
+      icon: '📎',
       quantity: 2 * scaleFactor,
-      unit: 'rolls',
-      notes: 'Hypoallergenic, for securing bandages',
+      unit: t('unit_rolls'),
+      notes: t('note_fa_medical_tape'),
     },
     {
-      name: 'Antiseptic wipes',
+      name: t('item_fa_antiseptic'),
+      icon: '🧴',
       quantity: 20 * scaleFactor,
-      unit: 'wipes',
-      notes: 'Wound cleaning, infection prevention',
+      unit: t('unit_wipes'),
+      notes: t('note_fa_antiseptic'),
     },
     {
-      name: 'Antibiotic ointment',
+      name: t('item_fa_antibiotic'),
+      icon: '🧴',
       quantity: 2 * scaleFactor,
-      unit: 'tubes',
-      notes: 'Apply to wounds to prevent infection',
+      unit: t('unit_tubes'),
+      notes: t('note_fa_antibiotic'),
     },
     {
-      name: 'Pain relievers (ibuprofen/acetaminophen)',
+      name: t('item_fa_pain_relief'),
+      icon: '💊',
       quantity: Math.ceil(input.people * input.days * 2),
-      unit: 'tablets',
-      notes: 'Up to 2 doses per person per day if needed',
+      unit: t('unit_tablets'),
+      notes: t('note_fa_pain_relief'),
     },
     {
-      name: 'Scissors (medical)',
+      name: t('item_fa_scissors'),
+      icon: '✂️',
       quantity: scaleFactor,
-      unit: 'pair',
-      notes: 'For cutting tape, gauze, and clothing',
+      unit: t('unit_pair'),
+      notes: t('note_fa_scissors'),
     },
     {
-      name: 'Tweezers',
+      name: t('item_fa_tweezers'),
+      icon: '🪡',
       quantity: scaleFactor,
-      unit: 'pair',
-      notes: 'Splinter and tick removal',
+      unit: t('unit_pair'),
+      notes: t('note_fa_tweezers'),
     },
     {
-      name: 'Elastic bandage (ACE wrap)',
+      name: t('item_fa_elastic_band'),
+      icon: '🩹',
       quantity: 2 * scaleFactor,
-      unit: 'rolls',
-      notes: 'For sprains and compression',
+      unit: t('unit_rolls'),
+      notes: t('note_fa_elastic_band'),
     },
     {
-      name: 'Triangular bandage',
+      name: t('item_fa_triangular'),
+      icon: '📐',
       quantity: 2 * scaleFactor,
-      unit: 'pieces',
-      notes: 'Sling, tourniquet, or bandage',
+      unit: t('unit_pieces'),
+      notes: t('note_fa_triangular'),
     },
     {
-      name: 'Disposable gloves',
+      name: t('item_fa_gloves'),
+      icon: '🧤',
       quantity: 10 * scaleFactor,
-      unit: 'pairs',
-      notes: 'Nitrile, for wound care hygiene',
+      unit: t('unit_pairs'),
+      notes: t('note_fa_gloves'),
     },
     {
-      name: 'CPR breathing barrier',
+      name: t('item_fa_cpr_barrier'),
+      icon: '❤️',
       quantity: scaleFactor,
-      unit: 'pieces',
-      notes: 'For safe rescue breathing',
+      unit: t('unit_pieces'),
+      notes: t('note_fa_cpr_barrier'),
     },
   ];
 
-  return { category: 'First Aid', items };
+  return { key: 'first_aid', category: t('cat_first_aid'), items };
 }
 
 function calculateHygiene(input: CalculatorInput): SupplyCategory {
   const items: SupplyItem[] = [
     {
-      name: 'Bar soap or body wash',
+      name: t('item_hyg_soap'),
+      icon: '🧼',
       quantity: Math.ceil((input.people * input.days) / 7),
-      unit: 'bars/bottles',
-      notes: 'One bar per person per week',
+      unit: t('unit_bars_bottles'),
+      notes: t('note_hyg_soap'),
     },
     {
-      name: 'Toilet paper',
+      name: t('item_hyg_toilet_paper'),
+      icon: '🧻',
       quantity: Math.ceil((input.people * input.days) / 5),
-      unit: 'rolls',
-      notes: 'Approximately 1 roll per person per 5 days',
+      unit: t('unit_rolls'),
+      notes: t('note_hyg_toilet_paper'),
     },
     {
-      name: 'Hand sanitizer',
+      name: t('item_hyg_hand_sanitizer'),
+      icon: '🤲',
       quantity: Math.max(1, Math.ceil(input.people / 2)),
-      unit: 'bottles (8oz)',
-      notes: 'At least 60% alcohol, when water unavailable',
+      unit: t('unit_bottles_8oz'),
+      notes: t('note_hyg_hand_sanitizer'),
     },
     {
-      name: 'Trash bags (heavy duty)',
+      name: t('item_hyg_trash_bags'),
+      icon: '🗑️',
       quantity: Math.ceil(input.people * input.days * 0.5),
-      unit: 'bags',
-      notes: 'Waste disposal, rain protection, ground cover',
+      unit: t('unit_bags'),
+      notes: t('note_hyg_trash_bags'),
     },
     {
-      name: 'Bleach (unscented)',
+      name: t('item_hyg_bleach'),
+      icon: '🧪',
       quantity: Math.max(1, Math.ceil(input.days / 14)),
-      unit: 'bottles (1qt)',
-      notes: 'Water purification (8 drops/gal) and sanitation',
+      unit: t('unit_bottles_1qt'),
+      notes: t('note_hyg_bleach'),
     },
     {
-      name: 'Toothbrush and toothpaste',
+      name: t('item_hyg_toothbrush'),
+      icon: '🪥',
       quantity: input.people,
-      unit: 'sets',
-      notes: 'One per person',
+      unit: t('unit_sets'),
+      notes: t('note_hyg_toothbrush'),
     },
     {
-      name: 'Wet wipes',
+      name: t('item_hyg_wet_wipes'),
+      icon: '💧',
       quantity: Math.ceil(input.people * input.days),
-      unit: 'packs (10ct)',
-      notes: 'Personal hygiene when bathing is unavailable',
+      unit: t('unit_packs_10ct'),
+      notes: t('note_hyg_wet_wipes'),
     },
   ];
 
-  return { category: 'Hygiene', items };
+  return { key: 'hygiene', category: t('cat_hygiene'), items };
 }
 
 function calculateShelter(input: CalculatorInput): SupplyCategory {
@@ -321,49 +357,53 @@ function calculateShelter(input: CalculatorInput): SupplyCategory {
 
   const items: SupplyItem[] = [
     {
-      name: 'Tarp (10x12 ft)',
+      name: t('item_shlt_tarp'),
+      icon: '⛺',
       quantity: Math.max(1, Math.ceil(input.people / 3)),
-      unit: 'tarps',
-      notes: 'Rain shelter, ground cover, windbreak',
+      unit: t('unit_tarps'),
+      notes: t('note_shlt_tarp'),
     },
     {
-      name: isCold ? 'Cold-weather sleeping bag' : 'Blanket/sleeping bag',
+      name: isCold ? t('item_shlt_sleeping_bag_cold') : t('item_shlt_sleeping_bag'),
+      icon: isCold ? '❄️' : '🛏️',
       quantity: input.people,
-      unit: 'pieces',
-      notes: isCold
-        ? 'Rated to 0F or below for cold climate'
-        : 'Standard weight, one per person',
+      unit: t('unit_pieces'),
+      notes: isCold ? t('note_shlt_sleeping_bag_cold') : t('note_shlt_sleeping_bag'),
     },
     {
-      name: 'Paracord (550)',
+      name: t('item_shlt_paracord'),
+      icon: '🪢',
       quantity: Math.max(1, Math.ceil(input.people / 2)) * 100,
-      unit: 'feet',
-      notes: 'Shelter building, gear repair, general utility',
+      unit: t('unit_feet'),
+      notes: t('note_shlt_paracord'),
     },
     {
-      name: 'Duct tape',
+      name: t('item_shlt_duct_tape'),
+      icon: '🖇️',
       quantity: Math.max(1, Math.ceil(input.people / 3)),
-      unit: 'rolls',
-      notes: 'Repairs, sealing, improvised tools',
+      unit: t('unit_rolls'),
+      notes: t('note_shlt_duct_tape'),
     },
     {
-      name: 'Emergency mylar blankets',
+      name: t('item_shlt_mylar'),
+      icon: '🏅',
       quantity: input.people * 2,
-      unit: 'blankets',
-      notes: 'Lightweight backup warmth, signaling',
+      unit: t('unit_blankets'),
+      notes: t('note_shlt_mylar'),
     },
   ];
 
   if (isCold) {
     items.push({
-      name: 'Insulated sleeping pad',
+      name: t('item_shlt_sleeping_pad'),
+      icon: '🛏️',
       quantity: input.people,
-      unit: 'pads',
-      notes: 'Ground insulation critical in cold weather',
+      unit: t('unit_pads'),
+      notes: t('note_shlt_sleeping_pad'),
     });
   }
 
-  return { category: 'Shelter', items };
+  return { key: 'shelter', category: t('cat_shelter'), items };
 }
 
 function calculateTools(input: CalculatorInput): SupplyCategory {
@@ -371,86 +411,99 @@ function calculateTools(input: CalculatorInput): SupplyCategory {
 
   const items: SupplyItem[] = [
     {
-      name: 'Flashlight (LED)',
+      name: t('item_tools_flashlight'),
+      icon: '🔦',
       quantity: Math.max(1, Math.ceil(input.people / 2)),
-      unit: 'flashlights',
-      notes: 'Waterproof preferred, for signaling and navigation',
+      unit: t('unit_flashlights'),
+      notes: t('note_tools_flashlight'),
     },
     {
-      name: 'Batteries (assorted AA/AAA)',
+      name: t('item_tools_batteries'),
+      icon: '🔋',
       quantity: Math.max(1, Math.ceil(input.people / 2)) * input.days * 2,
-      unit: 'batteries',
-      notes: 'Spares for flashlights and radio',
+      unit: t('unit_batteries'),
+      notes: t('note_tools_batteries'),
     },
     {
-      name: 'Fixed-blade knife',
+      name: t('item_tools_knife'),
+      icon: '🔪',
       quantity: scaleFactor,
-      unit: 'knives',
-      notes: 'Full tang, 4-6 inch blade for wood processing and food prep',
+      unit: t('unit_knives'),
+      notes: t('note_tools_knife'),
     },
     {
-      name: 'Multi-tool',
+      name: t('item_tools_multitool'),
+      icon: '🔧',
       quantity: scaleFactor,
-      unit: 'tools',
-      notes: 'Pliers, knife, screwdriver, can opener combo',
+      unit: t('unit_tools_item'),
+      notes: t('note_tools_multitool'),
     },
     {
-      name: 'AM/FM emergency radio',
+      name: t('item_tools_radio'),
+      icon: '📻',
       quantity: 1,
-      unit: 'radio',
-      notes: 'Hand-crank or solar-powered preferred',
+      unit: t('unit_radio'),
+      notes: t('note_tools_radio'),
     },
     {
-      name: 'Whistle (safety)',
+      name: t('item_tools_whistle'),
+      icon: '🎵',
       quantity: input.people,
-      unit: 'whistles',
-      notes: 'Pealess design, audible up to 1 mile, one per person',
+      unit: t('unit_whistles'),
+      notes: t('note_tools_whistle'),
     },
     {
-      name: 'Waterproof matches',
+      name: t('item_tools_matches'),
+      icon: '🔥',
       quantity: Math.max(2, scaleFactor) * 50,
-      unit: 'matches',
-      notes: 'In waterproof container',
+      unit: t('unit_matches'),
+      notes: t('note_tools_matches'),
     },
     {
-      name: 'Lighter (butane)',
+      name: t('item_tools_lighter'),
+      icon: '🔥',
       quantity: Math.max(2, scaleFactor),
-      unit: 'lighters',
-      notes: 'Backup fire starting',
+      unit: t('unit_lighters'),
+      notes: t('note_tools_lighter'),
     },
     {
-      name: 'Ferrocerium rod (fire starter)',
+      name: t('item_tools_firestarter'),
+      icon: '✨',
       quantity: scaleFactor,
-      unit: 'rods',
-      notes: 'Works when wet, unlimited shelf life',
+      unit: t('unit_rods'),
+      notes: t('note_tools_firestarter'),
     },
     {
-      name: 'Can opener (manual)',
+      name: t('item_tools_can_opener'),
+      icon: '🥄',
       quantity: scaleFactor,
-      unit: 'openers',
-      notes: 'P-38 military style or standard',
+      unit: t('unit_openers'),
+      notes: t('note_tools_can_opener'),
     },
     {
-      name: 'Adjustable wrench',
+      name: t('item_tools_wrench'),
+      icon: '🔧',
       quantity: 1,
-      unit: 'wrench',
-      notes: 'For turning off utilities if needed',
+      unit: t('unit_wrench'),
+      notes: t('note_tools_wrench'),
     },
     {
-      name: 'Pliers',
+      name: t('item_tools_pliers'),
+      icon: '🔩',
       quantity: 1,
-      unit: 'pair',
-      notes: 'Needle-nose preferred, multi-purpose',
+      unit: t('unit_pair'),
+      notes: t('note_tools_pliers'),
     },
     {
-      name: 'Compass',
+      name: t('item_tools_compass'),
+      icon: '🧭',
       quantity: scaleFactor,
-      unit: 'compasses',
-      notes: 'Baseplate style with declination adjustment',
+      unit: t('unit_compasses'),
+      notes: t('note_tools_compass'),
     },
   ];
 
-  return { category: 'Tools', items };
+  return { key: 'tools', category: t('cat_tools'), items };
 }
 
 // ─── Main Calculator ────────────────────────────────────────────────────────
@@ -485,25 +538,49 @@ export function calculateSupplies(input: CalculatorInput): CalculatorResult {
     calculateTools(sanitizedInput),
   ];
 
+  // Translate climate and activity labels
+  const climateLabel =
+    sanitizedInput.climate === 'hot'
+      ? t('climate_hot')
+      : sanitizedInput.climate === 'cold'
+        ? t('climate_cold')
+        : t('climate_temperate');
+
+  const activityLabel =
+    sanitizedInput.activityLevel === 'high'
+      ? t('activity_high')
+      : sanitizedInput.activityLevel === 'moderate'
+        ? t('activity_moderate')
+        : t('activity_low');
+
+  const peopleWord =
+    sanitizedInput.people === 1 ? t('word_person') : t('word_people');
+  const daysWord =
+    sanitizedInput.days === 1 ? t('word_day') : t('word_days');
+
   const notes: string[] = [
-    `Calculated for ${sanitizedInput.people} ${sanitizedInput.people === 1 ? 'person' : 'people'} over ${sanitizedInput.days} ${sanitizedInput.days === 1 ? 'day' : 'days'}.`,
-    `Climate: ${sanitizedInput.climate} | Activity level: ${sanitizedInput.activityLevel}.`,
+    tFormat('calc_note_calculated', {
+      people: String(sanitizedInput.people),
+      people_word: peopleWord,
+      days: String(sanitizedInput.days),
+      days_word: daysWord,
+    }),
+    tFormat('calc_note_climate_activity', {
+      climate: climateLabel,
+      activity: activityLabel,
+    }),
   ];
 
   if (sanitizedInput.climate === 'hot') {
-    notes.push('Hot climate: Water quantities increased by 50% to account for higher perspiration.');
+    notes.push(t('calc_note_hot_climate'));
   }
 
   if (sanitizedInput.activityLevel === 'high') {
-    notes.push(
-      'High activity: Water increased by 25% and calorie targets raised to 3000 cal/person/day.'
-    );
+    notes.push(t('calc_note_high_activity'));
   }
 
   if (sanitizedInput.days > 14) {
-    notes.push(
-      'Extended duration: Consider rotating perishable supplies and supplementing with foraging/hunting if trained.'
-    );
+    notes.push(t('calc_note_extended'));
   }
 
   return {

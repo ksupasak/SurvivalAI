@@ -1,44 +1,117 @@
-export const Colors = {
-  // Primary backgrounds
-  bg: '#0A0E17',
-  bgSecondary: '#111827',
-  bgTertiary: '#1A2332',
-  bgCard: '#151D2B',
-  bgCardHover: '#1C2740',
+// ─── Color type ───────────────────────────────────────────────────────────────
 
-  // Accent colors
-  amber: '#FFB800',
-  amberDark: '#CC9300',
-  amberLight: '#FFD54F',
-  green: '#00FF41',
-  greenDark: '#00CC33',
-  greenDim: '#00FF4130',
-  red: '#FF3B3B',
-  redDark: '#CC2E2E',
-  redDim: '#FF3B3B30',
-  blue: '#3B82F6',
-  blueDim: '#3B82F630',
-  cyan: '#00D4FF',
+export type ColorScheme = {
+  bg: string;
+  bgSecondary: string;
+  bgTertiary: string;
+  bgCard: string;
+  bgCardHover: string;
+  amber: string;
+  amberDark: string;
+  amberLight: string;
+  green: string;
+  greenDark: string;
+  greenDim: string;
+  red: string;
+  redDark: string;
+  redDim: string;
+  blue: string;
+  blueDim: string;
+  cyan: string;
+  text: string;
+  textSecondary: string;
+  textDim: string;
+  textAmber: string;
+  border: string;
+  borderLight: string;
+  online: string;
+  offline: string;
+  warning: string;
+  overlay: string;
+  transparent: string;
+};
 
-  // Text
-  text: '#E8ECF1',
-  textSecondary: '#8B95A5',
-  textDim: '#4A5568',
-  textAmber: '#FFB800',
+// ─── Light theme (default) ────────────────────────────────────────────────────
 
-  // Borders
-  border: '#1E293B',
-  borderLight: '#2D3A4F',
+export const LightColors: ColorScheme = {
+  bg: '#FFFFFF',
+  bgSecondary: '#F8F9FA',
+  bgTertiary: '#F0F2F5',
+  bgCard: '#FFFFFF',
+  bgCardHover: '#FFF5F5',
 
-  // Status
-  online: '#00FF41',
-  offline: '#FF3B3B',
-  warning: '#FFB800',
+  amber: '#DC2626',
+  amberDark: '#B91C1C',
+  amberLight: '#FCA5A5',
+  green: '#16A34A',
+  greenDark: '#15803D',
+  greenDim: '#16A34A25',
+  red: '#DC2626',
+  redDark: '#B91C1C',
+  redDim: '#DC262620',
+  blue: '#2563EB',
+  blueDim: '#2563EB20',
+  cyan: '#0891B2',
 
-  // Misc
-  overlay: 'rgba(0,0,0,0.7)',
+  text: '#111827',
+  textSecondary: '#6B7280',
+  textDim: '#9CA3AF',
+  textAmber: '#DC2626',
+
+  border: '#E5E7EB',
+  borderLight: '#F3F4F6',
+
+  online: '#16A34A',
+  offline: '#DC2626',
+  warning: '#D97706',
+
+  overlay: 'rgba(0,0,0,0.4)',
   transparent: 'transparent',
 };
+
+// ─── Dark theme (military/tactical) ──────────────────────────────────────────
+
+export const DarkColors: ColorScheme = {
+  bg: '#0a0e14',
+  bgSecondary: '#161b22',
+  bgTertiary: '#1a2233',
+  bgCard: '#0d1117',
+  bgCardHover: '#1a2233',
+
+  amber: '#d97706',
+  amberDark: '#b45309',
+  amberLight: '#fbbf24',
+  green: '#238636',
+  greenDark: '#1a7f37',
+  greenDim: '#23863625',
+  red: '#da3633',
+  redDark: '#b91c1c',
+  redDim: '#da363320',
+  blue: '#1f6feb',
+  blueDim: '#1f6feb20',
+  cyan: '#2dd4bf',
+
+  text: '#e6edf3',
+  textSecondary: '#8b949e',
+  textDim: '#484f58',
+  textAmber: '#d97706',
+
+  border: '#21262d',
+  borderLight: '#30363d',
+
+  online: '#238636',
+  offline: '#da3633',
+  warning: '#d97706',
+
+  overlay: 'rgba(0,0,0,0.6)',
+  transparent: 'transparent',
+};
+
+// ─── Backward-compat default export (light theme) ────────────────────────────
+
+export const Colors = LightColors;
+
+// ─── Spacing, FontSize, BorderRadius ─────────────────────────────────────────
 
 export const Spacing = {
   xs: 4,

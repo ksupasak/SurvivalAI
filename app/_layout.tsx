@@ -1,21 +1,31 @@
 import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Colors } from '@/constants/theme';
 import { initLocale } from '@/services/i18n';
+import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
 
-export default function RootLayout() {
+function RootLayoutInner() {
+  const { isDark } = useTheme();
+
   useEffect(() => {
     initLocale();
   }, []);
 
   return (
     <>
-      <StatusBar style="light" />
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: Colors.bg } }}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+      <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="profile" options={{ headerShown: false, presentation: 'modal' }} />
       </Stack>
     </>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <ThemeProvider>
+      <RootLayoutInner />
+    </ThemeProvider>
   );
 }
