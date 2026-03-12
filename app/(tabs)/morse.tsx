@@ -28,6 +28,7 @@ import { QUICK_MESSAGES } from '@/constants/morse-code';
 import { startBeacon, stopBeacon, isBeaconActive, getBeaconStatus } from '@/services/ble-beacon';
 import { startAudioBeacon, stopAudioBeacon } from '@/services/audio-beacon';
 import { getBatteryLevel, estimateTimeRemaining } from '@/services/battery';
+import { primeSosInterstitial, showSosInterstitial } from '../../services/ads';
 
 type IoniconsName = keyof typeof Ionicons.glyphMap;
 type Mode = 'send' | 'read';
@@ -286,12 +287,12 @@ function SeekingPanel({ onSwitchToMorse }: SeekingPanelProps) {
       <View style={seekingStyles.card}>
         <Text style={seekingStyles.cardTitle}>BEACON CONFIGURATION</Text>
         <Text style={seekingStyles.inputLabel}>Device Name</Text>
-        <TextInput style={seekingStyles.textInput} value={deviceName} onChangeText={setDeviceName}
-          placeholderTextColor={colors.textDim} editable={!beaconActive} color={colors.text} />
+        <TextInput style={[seekingStyles.textInput, { color: colors.text }]} value={deviceName} onChangeText={setDeviceName}
+          placeholderTextColor={colors.textDim} editable={!beaconActive} />
         <Text style={seekingStyles.inputLabel}>Emergency Message</Text>
-        <TextInput style={[seekingStyles.textInput, { minHeight: 72, textAlignVertical: 'top' }]}
+        <TextInput style={[seekingStyles.textInput, { minHeight: 72, textAlignVertical: 'top', color: colors.text }]}
           value={emergencyMessage} onChangeText={setEmergencyMessage}
-          multiline numberOfLines={3} placeholderTextColor={colors.textDim} editable={!beaconActive} color={colors.text} />
+          multiline numberOfLines={3} placeholderTextColor={colors.textDim} editable={!beaconActive} />
         <View style={seekingStyles.toggleRow}>
           <View style={seekingStyles.toggleInfo}>
             <Ionicons name="location" size={18} color={colors.cyan} />
@@ -502,6 +503,10 @@ export default function MorseScreen() {
     };
   }, []);
 
+  useEffect(() => {
+    void primeSosInterstitial();
+  }, []);
+
   // ---------- SEND Handlers ----------
   const ensureCameraPermission = useCallback(async (): Promise<boolean> => {
     if (!isNative) return true;
@@ -520,6 +525,12 @@ export default function MorseScreen() {
     if (!(await ensureCameraPermission())) {
       Alert.alert('Camera Permission', 'Camera permission is needed to control the flashlight.');
       return;
+    }
+
+    const adResult = await showSosInterstitial();
+
+    if (!adResult.shown && __DEV__) {
+      Alert.alert('Ad Not Shown', adResult.detail || adResult.reason);
     }
 
     setSosActive(true);

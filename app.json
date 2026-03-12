@@ -47,6 +47,13 @@
       "favicon": "./assets/favicon.png",
       "bundler": "metro"
     },
+    "extra": {
+      "react-native-google-mobile-ads": {
+        "android_app_id": "ca-app-pub-6925350052022587~7427698606",
+        "ios_app_id": "ca-app-pub-6925350052022587~4801535265",
+        "user_tracking_usage_description": "This identifier will be used to deliver personalized ads to you."
+      }
+    },
     "plugins": [
       "expo-router",
       "expo-camera",

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import {
   UIManager,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Spacing, FontSize, BorderRadius, type ColorScheme } from '@/constants/theme';
+import { Spacing, FontSize, BorderRadius, LightColors, type ColorScheme } from '@/constants/theme';
 import { useTheme } from '@/contexts/ThemeContext';
 import { t, useLocale } from '@/services/i18n';
 import {
@@ -23,6 +23,7 @@ import {
   Climate,
   ActivityLevel,
 } from '@/services/calculator';
+import { primeCalculatorInterstitial, showCalculatorInterstitial } from '@/services/ads';
 
 type IoniconsName = keyof typeof Ionicons.glyphMap;
 
@@ -48,12 +49,12 @@ const CATEGORY_ICONS: Record<string, IoniconsName> = {
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
-  water: Colors.blue,
-  food: Colors.amber,
-  first_aid: Colors.red,
-  hygiene: Colors.cyan,
-  shelter: Colors.green,
-  tools: Colors.textSecondary,
+  water: LightColors.blue,
+  food: LightColors.amber,
+  first_aid: LightColors.red,
+  hygiene: LightColors.cyan,
+  shelter: LightColors.green,
+  tools: LightColors.textSecondary,
 };
 
 // ─── Stepper Component ──────────────────────────────────────────────────────
@@ -66,9 +67,23 @@ interface StepperProps {
   step?: number;
   onValueChange: (value: number) => void;
   suffix?: string;
+  styles: any;
+  iconColor: string;
+  disabledIconColor: string;
 }
 
-function Stepper({ label, value, min, max, step = 1, onValueChange, suffix }: StepperProps) {
+function Stepper({
+  label,
+  value,
+  min,
+  max,
+  step = 1,
+  onValueChange,
+  suffix,
+  styles,
+  iconColor,
+  disabledIconColor,
+}: StepperProps) {
   const canDecrement = value > min;
   const canIncrement = value < max;
 
@@ -88,7 +103,7 @@ function Stepper({ label, value, min, max, step = 1, onValueChange, suffix }: St
           <Ionicons
             name="remove"
             size={20}
-            color={canDecrement ? Colors.text : Colors.textDim}
+            color={canDecrement ? iconColor : disabledIconColor}
           />
         </TouchableOpacity>
         <View style={styles.stepperValueContainer}>
@@ -107,7 +122,7 @@ function Stepper({ label, value, min, max, step = 1, onValueChange, suffix }: St
           <Ionicons
             name="add"
             size={20}
-            color={canIncrement ? Colors.text : Colors.textDim}
+            color={canIncrement ? iconColor : disabledIconColor}
           />
         </TouchableOpacity>
       </View>
@@ -123,6 +138,7 @@ interface CategoryCardProps {
   onToggle: () => void;
   checkedItems: Set<string>;
   onToggleItem: (key: string) => void;
+  styles: any;
 }
 
 function CategoryCard({
@@ -131,9 +147,10 @@ function CategoryCard({
   onToggle,
   checkedItems,
   onToggleItem,
+  styles,
 }: CategoryCardProps) {
   const icon = CATEGORY_ICONS[category.key] || 'cube-outline';
-  const color = CATEGORY_COLORS[category.key] || Colors.textSecondary;
+  const color = CATEGORY_COLORS[category.key] || LightColors.textSecondary;
   const checkedCount = category.items.filter((_, i) =>
     checkedItems.has(`${category.key}-${i}`)
   ).length;
@@ -157,7 +174,7 @@ function CategoryCard({
         <Ionicons
           name={isExpanded ? 'chevron-up' : 'chevron-down'}
           size={18}
-          color={Colors.textSecondary}
+          color={LightColors.textSecondary}
         />
       </TouchableOpacity>
 
@@ -180,7 +197,7 @@ function CategoryCard({
                   ]}
                 >
                   {isChecked && (
-                    <Ionicons name="checkmark" size={14} color={Colors.bg} />
+                    <Ionicons name="checkmark" size={14} color={LightColors.bg} />
                   )}
                 </View>
                 <Text style={styles.itemIcon}>{item.icon}</Text>
@@ -241,6 +258,10 @@ export default function CalculatorScreen() {
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
   const [isCalculatePressed, setIsCalculatePressed] = useState(false);
 
+  useEffect(() => {
+    void primeCalculatorInterstitial();
+  }, []);
+
   // ─── Derived values ────────────────────────────────────────────────
 
   const totalItems = useMemo(() => {
@@ -253,14 +274,16 @@ export default function CalculatorScreen() {
   const progressPercent = totalItems > 0 ? (checkedCount / totalItems) * 100 : 0;
 
   const progressColor = useMemo(() => {
-    if (progressPercent < 33) return Colors.red;
-    if (progressPercent < 66) return Colors.amber;
-    return Colors.green;
+    if (progressPercent < 33) return LightColors.red;
+    if (progressPercent < 66) return LightColors.amber;
+    return LightColors.green;
   }, [progressPercent]);
 
   // ─── Handlers ──────────────────────────────────────────────────────
 
-  const handleCalculate = useCallback(() => {
+  const handleCalculate = useCallback(async () => {
+    await showCalculatorInterstitial();
+
     const input: CalculatorInput = { people, days, climate, activityLevel };
     const calcResult = calculateSupplies(input);
 
@@ -325,7 +348,7 @@ export default function CalculatorScreen() {
         {/* ── Input Card ─────────────────────────────────────── */}
         <View style={styles.inputCard}>
           <View style={styles.inputCardHeader}>
-            <Ionicons name="options-outline" size={16} color={Colors.amber} />
+            <Ionicons name="options-outline" size={16} color={LightColors.amber} />
             <Text style={styles.inputCardTitle}>{t('calc_parameters')}</Text>
           </View>
 
@@ -336,6 +359,9 @@ export default function CalculatorScreen() {
             min={1}
             max={50}
             onValueChange={setPeople}
+            styles={styles}
+            iconColor={colors.text}
+            disabledIconColor={colors.textDim}
           />
 
           <View style={styles.divider} />
@@ -348,6 +374,9 @@ export default function CalculatorScreen() {
             max={365}
             onValueChange={setDays}
             suffix={days === 1 ? t('calc_day_singular') : t('calc_day_plural')}
+            styles={styles}
+            iconColor={colors.text}
+            disabledIconColor={colors.textDim}
           />
           <View style={styles.presetRow}>
             {DAY_PRESETS.map((preset) => (
@@ -408,7 +437,7 @@ export default function CalculatorScreen() {
                 <Ionicons
                   name={opt.icon}
                   size={16}
-                  color={climate === opt.value ? Colors.bg : Colors.textSecondary}
+                  color={climate === opt.value ? LightColors.bg : LightColors.textSecondary}
                 />
                 <Text
                   style={[
@@ -444,7 +473,7 @@ export default function CalculatorScreen() {
                   style={[
                     styles.pillText,
                     activityLevel === opt.value && {
-                      color: Colors.bg,
+                      color: LightColors.bg,
                       fontWeight: '700',
                     },
                   ]}
@@ -467,7 +496,7 @@ export default function CalculatorScreen() {
           onPressOut={() => setIsCalculatePressed(false)}
           onPress={handleCalculate}
         >
-          <Ionicons name="calculator" size={22} color={Colors.bg} />
+          <Ionicons name="calculator" size={22} color={LightColors.bg} />
           <Text style={styles.calculateButtonText}>{t('calc_btn_calculate')}</Text>
         </TouchableOpacity>
 
@@ -477,7 +506,7 @@ export default function CalculatorScreen() {
             {/* Summary Card */}
             <View style={styles.summaryCard}>
               <View style={styles.summaryIconRow}>
-                <Ionicons name="clipboard-outline" size={20} color={Colors.amber} />
+                <Ionicons name="clipboard-outline" size={20} color={LightColors.amber} />
                 <Text style={styles.summaryTitle}>{t('calc_summary_title')}</Text>
               </View>
               <Text style={styles.summaryText}>
@@ -492,13 +521,13 @@ export default function CalculatorScreen() {
               </Text>
               <View style={styles.summaryMeta}>
                 <View style={styles.summaryMetaItem}>
-                  <Ionicons name="fitness-outline" size={14} color={Colors.textSecondary} />
+                  <Ionicons name="fitness-outline" size={14} color={LightColors.textSecondary} />
                   <Text style={styles.summaryMetaText}>
                     {t(`activity_${result.input.activityLevel}`)} {t('calc_activity_label')}
                   </Text>
                 </View>
                 <View style={styles.summaryMetaItem}>
-                  <Ionicons name="cube-outline" size={14} color={Colors.textSecondary} />
+                  <Ionicons name="cube-outline" size={14} color={LightColors.textSecondary} />
                   <Text style={styles.summaryMetaText}>
                     {totalItems} {t('calc_items_total')}
                   </Text>
@@ -544,6 +573,7 @@ export default function CalculatorScreen() {
                 onToggle={() => toggleCategory(category.key)}
                 checkedItems={checkedItems}
                 onToggleItem={toggleItem}
+                styles={styles}
               />
             ))}
 
@@ -554,7 +584,7 @@ export default function CalculatorScreen() {
                   <Ionicons
                     name="information-circle-outline"
                     size={16}
-                    color={Colors.cyan}
+                    color={LightColors.cyan}
                   />
                   <Text style={styles.notesSectionTitle}>{t('calc_notes_title')}</Text>
                 </View>
@@ -563,7 +593,7 @@ export default function CalculatorScreen() {
                     <Ionicons
                       name="chevron-forward"
                       size={14}
-                      color={Colors.cyan}
+                      color={LightColors.cyan}
                       style={styles.noteIcon}
                     />
                     <Text style={styles.noteText}>{note}</Text>
@@ -578,7 +608,7 @@ export default function CalculatorScreen() {
               activeOpacity={0.7}
               onPress={handleExport}
             >
-              <Ionicons name="share-outline" size={18} color={Colors.amber} />
+              <Ionicons name="share-outline" size={18} color={LightColors.amber} />
               <Text style={styles.exportButtonText}>{t('calc_export_btn')}</Text>
             </TouchableOpacity>
           </View>

@@ -33,6 +33,7 @@ import {
   type Note,
   type S3Config,
 } from '@/services/notes';
+import { primeNotesInterstitial, showNotesInterstitial } from '@/services/ads';
 
 // ─── Priority config ────────────────────────────────────────────────────────
 
@@ -124,6 +125,10 @@ export default function NotesScreen() {
     }
   }, []);
 
+  useEffect(() => {
+    void primeNotesInterstitial();
+  }, []);
+
   // ─── Open editor ─────────────────────────────────────────────────────
 
   const openNewNote = useCallback(() => {
@@ -135,6 +140,11 @@ export default function NotesScreen() {
     setEdImages([]);
     setShowEditor(true);
   }, []);
+
+  const handleCreateFirstNote = useCallback(async () => {
+    await showNotesInterstitial();
+    openNewNote();
+  }, [openNewNote]);
 
   const openEditNote = useCallback((note: Note) => {
     setEditingNote(note);
@@ -388,7 +398,7 @@ export default function NotesScreen() {
           </Text>
           <TouchableOpacity
             style={styles.emptyButton}
-            onPress={openNewNote}
+            onPress={handleCreateFirstNote}
             activeOpacity={0.7}
           >
             <Ionicons name="add" size={18} color={colors.bg} />

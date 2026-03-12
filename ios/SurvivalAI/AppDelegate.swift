@@ -1,4 +1,4 @@
-internal import Expo
+import Expo
 import React
 import ReactAppDependencyProvider
 
@@ -16,6 +16,7 @@ class AppDelegate: ExpoAppDelegate {
     let delegate = ReactNativeDelegate()
     let factory = ExpoReactNativeFactory(delegate: delegate)
     delegate.dependencyProvider = RCTAppDependencyProvider()
+    bindReactNativeFactory(factory)
 
     reactNativeDelegate = delegate
     reactNativeFactory = factory
