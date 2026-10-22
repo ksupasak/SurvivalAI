@@ -30,6 +30,12 @@
       "runtimeExecutable": "npx",
       "runtimeArgs": ["expo", "run:ios"],
       "port": 8081
+    },
+    {
+      "name": "board-server",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["server/index.js"],
+      "port": 3000
     }
   ]
 }

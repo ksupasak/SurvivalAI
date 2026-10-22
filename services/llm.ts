@@ -13,12 +13,28 @@ import { getApiKey, getCustomServerUrl, getCustomModel } from '@/services/settin
 import { t } from '@/services/i18n';
 import { getActiveModel, getModelPath, type ModelInfo } from '@/services/model-download';
 
-// llama.rn is native-only — lazy-load to avoid crashing on web
-let _initLlama: typeof import('llama.rn').initLlama | null = null;
+// llama.rn is an optional native module. It is native-only, and it may not be
+// installed at all — the on-device LLM weighs ~56 MB of native code, so builds
+// can ship without it. Everything here degrades to the knowledge base.
+let _initLlama: ((...args: any[]) => any) | null = null;
 let _LlamaContext: any = null;
 
+/**
+ * Whether the on-device LLM can run in this build. False when llama.rn is not
+ * bundled, in which case the mode must not be offered in the UI.
+ */
+export const OFFLINE_LLM_SUPPORTED: boolean = (() => {
+  if (Platform.OS === 'web') return false;
+  try {
+    require('llama.rn');
+    return true;
+  } catch {
+    return false;
+  }
+})();
+
 async function getLlamaRn() {
-  if (Platform.OS === 'web') return null;
+  if (!OFFLINE_LLM_SUPPORTED) return null;
   if (!_initLlama) {
     try {
       const mod = require('llama.rn');
@@ -169,7 +185,7 @@ export async function initOfflineLlm(model?: ModelInfo): Promise<boolean> {
         cache_type_k: 'q4_0',
         cache_type_v: 'q4_0',
       },
-      (progress) => {
+      (progress: number) => {
         setLlmStatus({ state: 'loading', progress: progress / 100 });
       }
     );

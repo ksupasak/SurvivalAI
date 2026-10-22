@@ -24,8 +24,14 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { textToMorse, morseToText, textToTimingSequence, generateSOSSequence } from '@/services/morse';
 import { playMorseSequence, stopPlayback, isPlaying, subscribeTorchState } from '@/services/flashlight';
 import { startDecoder, stopDecoder, updateSensitivity, clearDecoded, type DecoderUpdate } from '@/services/morse-decoder';
+import {
+  playMorseAudio,
+  stopMorseAudio,
+  startAudioMorseListening,
+  stopAudioMorseListening,
+} from '@/services/morse-audio';
 import { QUICK_MESSAGES } from '@/constants/morse-code';
-import { startBeacon, stopBeacon, isBeaconActive, getBeaconStatus } from '@/services/ble-beacon';
+import { startBeacon, stopBeacon, isBeaconActive, getBeaconStatus } from '@/services/wifi-beacon';
 import { startAudioBeacon, stopAudioBeacon } from '@/services/audio-beacon';
 import { getBatteryLevel, estimateTimeRemaining } from '@/services/battery';
 
@@ -107,8 +113,8 @@ function SeekingPanel({ onSwitchToMorse }: SeekingPanelProps) {
   const [gpsCoords] = useState({ lat: '34.0522', lon: '-118.2437' });
   const [gpsAcquired, setGpsAcquired] = useState(false);
 
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-  const glowAnim = useRef(new Animated.Value(0.4)).current;
+  const [pulseAnim] = useState(() => new Animated.Value(1));
+  const [glowAnim] = useState(() => new Animated.Value(0.4));
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const savedBrightness = useRef<number | null>(null);
 
@@ -167,7 +173,9 @@ function SeekingPanel({ onSwitchToMorse }: SeekingPanelProps) {
           const current = await Brightness.getBrightnessAsync();
           savedBrightness.current = current;
           await Brightness.setBrightnessAsync(0.05);
-        } catch (_) {}
+        } catch {
+          /* brightness control unavailable on this device */
+        }
       })();
     } else if (savedBrightness.current !== null) {
       Brightness.setBrightnessAsync(savedBrightness.current).catch(() => {});
@@ -253,7 +261,7 @@ function SeekingPanel({ onSwitchToMorse }: SeekingPanelProps) {
           </Animated.View>
         </TouchableOpacity>
         <Text style={seekingStyles.activationDescription}>
-          Broadcasts your location via BLE & WiFi for rescue teams to detect
+          Broadcasts your location over local WiFi for rescue teams to detect
         </Text>
       </View>
 
@@ -268,7 +276,7 @@ function SeekingPanel({ onSwitchToMorse }: SeekingPanelProps) {
               { label: 'Battery Level', value: batteryPct, color: getBatteryColor() },
               { label: 'Est. Battery Time', value: batteryTimeEstimate, color: colors.amber },
               { label: 'GPS Coordinates', value: includeGPS ? (gpsAcquired ? `${gpsCoords.lat}, ${gpsCoords.lon}` : 'Acquiring...') : 'Disabled', color: gpsAcquired ? colors.cyan : colors.textDim },
-              { label: 'Signal Range', value: '~50m BLE / ~100m WiFi', color: colors.textSecondary },
+              { label: 'Signal Range', value: '~100m WiFi', color: colors.textSecondary },
             ].map((item) => (
               <View key={item.label} style={seekingStyles.statusItem}>
                 <Text style={seekingStyles.statusLabel}>{item.label}</Text>
@@ -286,12 +294,12 @@ function SeekingPanel({ onSwitchToMorse }: SeekingPanelProps) {
       <View style={seekingStyles.card}>
         <Text style={seekingStyles.cardTitle}>BEACON CONFIGURATION</Text>
         <Text style={seekingStyles.inputLabel}>Device Name</Text>
-        <TextInput style={seekingStyles.textInput} value={deviceName} onChangeText={setDeviceName}
-          placeholderTextColor={colors.textDim} editable={!beaconActive} color={colors.text} />
+        <TextInput style={[seekingStyles.textInput, { color: colors.text }]} value={deviceName} onChangeText={setDeviceName}
+          placeholderTextColor={colors.textDim} editable={!beaconActive} />
         <Text style={seekingStyles.inputLabel}>Emergency Message</Text>
-        <TextInput style={[seekingStyles.textInput, { minHeight: 72, textAlignVertical: 'top' }]}
+        <TextInput style={[seekingStyles.textInput, { minHeight: 72, textAlignVertical: 'top', color: colors.text }]}
           value={emergencyMessage} onChangeText={setEmergencyMessage}
-          multiline numberOfLines={3} placeholderTextColor={colors.textDim} editable={!beaconActive} color={colors.text} />
+          multiline numberOfLines={3} placeholderTextColor={colors.textDim} editable={!beaconActive} />
         <View style={seekingStyles.toggleRow}>
           <View style={seekingStyles.toggleInfo}>
             <Ionicons name="location" size={18} color={colors.cyan} />
@@ -335,7 +343,7 @@ function SeekingPanel({ onSwitchToMorse }: SeekingPanelProps) {
           <Text style={[seekingStyles.cardTitle, { marginBottom: 0 }]}>BATTERY PRESERVATION</Text>
         </View>
         <View style={seekingStyles.bulletList}>
-          {['Reducing screen brightness', 'Disabling non-essential services', 'Using low-power BLE advertising', 'Optimizing signal intervals'].map((item, i) => (
+          {['Reducing screen brightness', 'Disabling non-essential services', 'Lowering beacon broadcast rate', 'Optimizing signal intervals'].map((item, i) => (
             <View key={i} style={seekingStyles.bulletItem}>
               <Ionicons name="checkmark-circle" size={16} color={colors.green} />
               <Text style={seekingStyles.bulletText}>{item}</Text>
@@ -424,6 +432,9 @@ export default function MorseScreen() {
   const [currentLux, setCurrentLux] = useState(0);
   const [lightDetected, setLightDetected] = useState(false);
   const [sensitivity, setSensitivity] = useState(50);
+  // Light needs the flashlight and an ambient light sensor; sound needs only
+  // the speaker and mic, which is the only channel that works on iOS.
+  const [channel, setChannel] = useState<'light' | 'sound'>('light');
   const [signalLog, setSignalLog] = useState<SignalLogEntry[]>([]);
   const [demoAnimating, setDemoAnimating] = useState(false);
 
@@ -450,7 +461,7 @@ export default function MorseScreen() {
   }, []);
 
   // SOS pulse animation
-  const sosPulseAnim = useRef(new Animated.Value(1)).current;
+  const [sosPulseAnim] = useState(() => new Animated.Value(1));
   const sosPulseRef = useRef<Animated.CompositeAnimation | null>(null);
 
   // Update morse output when text changes
@@ -550,6 +561,7 @@ export default function MorseScreen() {
   const handleTransmit = useCallback(async () => {
     if (transmitting) {
       stopPlayback();
+      stopMorseAudio();
       setTransmitting(false);
       setTransmitProgress(0);
       return;
@@ -557,6 +569,16 @@ export default function MorseScreen() {
 
     if (!inputText.trim()) {
       Alert.alert('No Message', 'Enter a message to transmit.');
+      return;
+    }
+
+    if (channel === 'sound') {
+      setTransmitting(true);
+      setTransmitProgress(0);
+      await playMorseAudio(inputText, wpm, () => {
+        setTransmitting(false);
+        setTransmitProgress(0);
+      });
       return;
     }
 
@@ -584,7 +606,7 @@ export default function MorseScreen() {
       setTransmitting(false);
       setTimeout(() => setTransmitProgress(0), 1000);
     }
-  }, [transmitting, inputText, wpm, ensureCameraPermission]);
+  }, [transmitting, inputText, wpm, channel, ensureCameraPermission]);
 
   const handlePersonalInfo = useCallback(() => {
     Alert.alert(
@@ -599,6 +621,7 @@ export default function MorseScreen() {
     if (detecting) {
       // Stop detection
       stopDecoder();
+      stopAudioMorseListening();
       setDetecting(false);
       // Save to log if we decoded something
       if (decodedText.trim()) {
@@ -634,10 +657,19 @@ export default function MorseScreen() {
         setCurrentLux(Math.round(update.lux));
         setLightDetected(update.isLight);
       }, sensitivity);
+
+      if (channel === 'sound') {
+        const started = await startAudioMorseListening();
+        if (!started) {
+          stopDecoder();
+          Alert.alert('Microphone Permission', 'Microphone access is needed to decode Morse from sound.');
+          return;
+        }
+      }
     }
 
     setDetecting(true);
-  }, [detecting, decodedText, decodedMorse, sensitivity, isNative, hasCameraPermission, requestCameraPermission]);
+  }, [detecting, decodedText, decodedMorse, sensitivity, channel, isNative, hasCameraPermission, requestCameraPermission]);
 
   const handleDemo = useCallback((signal: string) => {
     if (demoAnimating) return;
@@ -799,6 +831,42 @@ export default function MorseScreen() {
             />
             <Text style={[styles.segmentText, mode === 'read' && styles.segmentTextActive]}>
               READ
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Light uses the torch and the ambient light sensor; sound uses the
+            speaker and mic. Sound is the only channel that works on iOS,
+            where there is no light sensor to read. */}
+        <View style={[styles.segmentedControl, { marginTop: Spacing.sm }]}>
+          <TouchableOpacity
+            style={[styles.segmentButton, channel === 'light' && styles.segmentButtonActive]}
+            onPress={() => setChannel('light')}
+            activeOpacity={0.7}
+            disabled={transmitting || detecting}
+          >
+            <Ionicons
+              name="flashlight-outline"
+              size={16}
+              color={channel === 'light' ? colors.bg : colors.textSecondary}
+            />
+            <Text style={[styles.segmentText, channel === 'light' && styles.segmentTextActive]}>
+              LIGHT
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.segmentButton, channel === 'sound' && styles.segmentButtonActive]}
+            onPress={() => setChannel('sound')}
+            activeOpacity={0.7}
+            disabled={transmitting || detecting}
+          >
+            <Ionicons
+              name="volume-high-outline"
+              size={16}
+              color={channel === 'sound' ? colors.bg : colors.textSecondary}
+            />
+            <Text style={[styles.segmentText, channel === 'sound' && styles.segmentTextActive]}>
+              SOUND
             </Text>
           </TouchableOpacity>
         </View>

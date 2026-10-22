@@ -3,7 +3,7 @@
  *
  * Monitors device battery level and state using expo-battery.
  * Provides estimates for remaining usage time, accounting for
- * power-intensive features like Seeking mode (BLE beacon).
+ * power-intensive features like Seeking mode (WiFi beacon).
  */
 
 import * as Battery from 'expo-battery';
@@ -73,11 +73,11 @@ export function subscribeToBattery(callback: (level: number) => void): () => voi
  * These are rough estimates based on typical smartphone power consumption:
  * - Normal standby: ~24 hours at 100%
  * - Active app use: ~8 hours at 100%
- * - Seeking mode (BLE + GPS): ~5 hours at 100% (higher drain from
- *   continuous Bluetooth advertising and location services)
+ * - Seeking mode (WiFi beacon + GPS): ~5 hours at 100% (higher drain from
+ *   continuous UDP broadcast and location services)
  *
  * @param level - Current battery level (0-1)
- * @param seekingMode - Whether Seeking mode (BLE beacon) is active
+ * @param seekingMode - Whether Seeking mode (WiFi beacon) is active
  * @returns Human-readable estimate string like "~4h remaining"
  */
 export function estimateTimeRemaining(level: number, seekingMode: boolean): string {
@@ -90,7 +90,7 @@ export function estimateTimeRemaining(level: number, seekingMode: boolean): stri
   }
 
   // Estimated total hours at 100% battery
-  // Seeking mode drains faster due to BLE advertising + GPS
+  // Seeking mode drains faster due to UDP broadcast + GPS
   const totalHoursAtFull = seekingMode ? 5 : 8;
 
   const hoursRemaining = level * totalHoursAtFull;

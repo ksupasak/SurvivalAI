@@ -1,16 +1,26 @@
 /**
  * Morse Code Light Decoder
  *
- * Uses the device's ambient light sensor (expo-sensors LightSensor) to detect
- * flashing light patterns and decode them as Morse code in real time.
+ * Detects flashing light patterns and decodes them as Morse code in real time.
+ *
+ * Brightness comes from one of two sources depending on the platform:
+ *  - Android: the ambient light sensor (expo-sensors LightSensor).
+ *  - iOS: camera frame luminance, pushed in by the caller via pushReading().
+ *    iOS exposes no public ambient light sensor, which is why expo-sensors
+ *    ships LightSensor for Android only — reading the sensor there returns
+ *    nothing at all, so the decoder never saw a single sample.
  *
  * The decoder uses adaptive timing: it calibrates the "dot" duration from
  * the first few short flashes detected, then classifies subsequent signals
  * relative to that baseline.
  */
 
+import { Platform } from 'react-native';
 import { LightSensor } from 'expo-sensors';
 import { MORSE_TO_CHAR } from '@/constants/morse-code';
+
+/** Android reads a real sensor; iOS has none and must be fed externally. */
+export const USES_LIGHT_SENSOR = Platform.OS === 'android';
 
 export type DecoderUpdate = {
   /** Morse symbols being built for the current character (e.g. ".-") */
@@ -165,11 +175,27 @@ export function startDecoder(cb: DecoderCallback, sensitivity: number = 50): voi
   recentShortPulses = [];
   dotDuration = 150;
 
+  if (!USES_LIGHT_SENSOR) {
+    // Caller drives the decoder with pushReading() instead.
+    return;
+  }
+
   LightSensor.setUpdateInterval(30); // ~33 readings/sec
 
   subscription = LightSensor.addListener(({ illuminance }) => {
     processReading(illuminance);
   });
+}
+
+/**
+ * Feed a brightness sample in from outside, for platforms with no light
+ * sensor. Ignored unless the decoder is running.
+ *
+ * @param lux  Brightness on the same scale the thresholds use
+ */
+export function pushReading(lux: number): void {
+  if (!callback) return;
+  processReading(lux);
 }
 
 /**

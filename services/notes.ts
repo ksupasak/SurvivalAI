@@ -35,7 +35,7 @@ export interface S3Config {
   secretAccessKey: string;
 }
 
-let notes: Note[] = [];
+const notes: Note[] = [];
 let s3Config: S3Config | null = null;
 let listeners: Array<() => void> = [];
 

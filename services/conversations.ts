@@ -5,7 +5,7 @@
  * Each conversation is stored as a JSON file in the device's document directory.
  */
 
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 

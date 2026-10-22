@@ -1,0 +1,9 @@
+node_modules/
+.expo/
+dist/
+server/
+plugins/
+android/
+ios/
+*.config.js
+babel.config.js

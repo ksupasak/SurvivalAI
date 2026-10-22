@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -14,7 +14,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Spacing, FontSize, BorderRadius, type ColorScheme } from '@/constants/theme';
 import { useTheme } from '@/contexts/ThemeContext';
-import { t, useLocale } from '@/services/i18n';
+import { t, tFormat, useLocale } from '@/services/i18n';
 import {
   calculateSupplies,
   CalculatorInput,
@@ -47,16 +47,20 @@ const CATEGORY_ICONS: Record<string, IoniconsName> = {
   tools: 'construct-outline',
 };
 
-const CATEGORY_COLORS: Record<string, string> = {
-  water: Colors.blue,
-  food: Colors.amber,
-  first_aid: Colors.red,
-  hygiene: Colors.cyan,
-  shelter: Colors.green,
-  tools: Colors.textSecondary,
-};
+function categoryColors(c: ColorScheme): Record<string, string> {
+  return {
+    water: c.blue,
+    food: c.amber,
+    first_aid: c.red,
+    hygiene: c.cyan,
+    shelter: c.green,
+    tools: c.textSecondary,
+  };
+}
 
 // ─── Stepper Component ──────────────────────────────────────────────────────
+
+type CalcStyles = ReturnType<typeof calcStyles>;
 
 interface StepperProps {
   label: string;
@@ -66,9 +70,11 @@ interface StepperProps {
   step?: number;
   onValueChange: (value: number) => void;
   suffix?: string;
+  colors: ColorScheme;
+  styles: CalcStyles;
 }
 
-function Stepper({ label, value, min, max, step = 1, onValueChange, suffix }: StepperProps) {
+function Stepper({ label, value, min, max, step = 1, onValueChange, suffix, colors, styles }: StepperProps) {
   const canDecrement = value > min;
   const canIncrement = value < max;
 
@@ -88,7 +94,7 @@ function Stepper({ label, value, min, max, step = 1, onValueChange, suffix }: St
           <Ionicons
             name="remove"
             size={20}
-            color={canDecrement ? Colors.text : Colors.textDim}
+            color={canDecrement ? colors.text : colors.textDim}
           />
         </TouchableOpacity>
         <View style={styles.stepperValueContainer}>
@@ -107,7 +113,7 @@ function Stepper({ label, value, min, max, step = 1, onValueChange, suffix }: St
           <Ionicons
             name="add"
             size={20}
-            color={canIncrement ? Colors.text : Colors.textDim}
+            color={canIncrement ? colors.text : colors.textDim}
           />
         </TouchableOpacity>
       </View>
@@ -123,6 +129,8 @@ interface CategoryCardProps {
   onToggle: () => void;
   checkedItems: Set<string>;
   onToggleItem: (key: string) => void;
+  colors: ColorScheme;
+  styles: CalcStyles;
 }
 
 function CategoryCard({
@@ -131,9 +139,11 @@ function CategoryCard({
   onToggle,
   checkedItems,
   onToggleItem,
+  colors,
+  styles,
 }: CategoryCardProps) {
   const icon = CATEGORY_ICONS[category.key] || 'cube-outline';
-  const color = CATEGORY_COLORS[category.key] || Colors.textSecondary;
+  const color = categoryColors(colors)[category.key] || colors.textSecondary;
   const checkedCount = category.items.filter((_, i) =>
     checkedItems.has(`${category.key}-${i}`)
   ).length;
@@ -157,7 +167,7 @@ function CategoryCard({
         <Ionicons
           name={isExpanded ? 'chevron-up' : 'chevron-down'}
           size={18}
-          color={Colors.textSecondary}
+          color={colors.textSecondary}
         />
       </TouchableOpacity>
 
@@ -180,7 +190,7 @@ function CategoryCard({
                   ]}
                 >
                   {isChecked && (
-                    <Ionicons name="checkmark" size={14} color={Colors.bg} />
+                    <Ionicons name="checkmark" size={14} color={colors.bg} />
                   )}
                 </View>
                 <Text style={styles.itemIcon}>{item.icon}</Text>
@@ -213,7 +223,7 @@ function CategoryCard({
 // ─── Main Screen ────────────────────────────────────────────────────────────
 
 export default function CalculatorScreen() {
-  useLocale(); // Re-render when locale changes
+  const locale = useLocale(); // Re-render when locale changes
   const { colors } = useTheme();
 
   const CLIMATE_OPTIONS: { value: Climate; label: string; icon: IoniconsName }[] = [
@@ -253,9 +263,9 @@ export default function CalculatorScreen() {
   const progressPercent = totalItems > 0 ? (checkedCount / totalItems) * 100 : 0;
 
   const progressColor = useMemo(() => {
-    if (progressPercent < 33) return Colors.red;
-    if (progressPercent < 66) return Colors.amber;
-    return Colors.green;
+    if (progressPercent < 33) return colors.red;
+    if (progressPercent < 66) return colors.amber;
+    return colors.green;
   }, [progressPercent]);
 
   // ─── Handlers ──────────────────────────────────────────────────────
@@ -270,6 +280,19 @@ export default function CalculatorScreen() {
     // Expand all categories by default
     setExpandedCategories(new Set(calcResult.categories.map((c) => c.key)));
   }, [people, days, climate, activityLevel]);
+
+  // calculateSupplies() resolves every label through t() and bakes the result
+  // into the stored object, so a locale change has to recompute it — a re-render
+  // on its own would keep showing the previous language. Checked items survive
+  // because their keys are built from category.key, which is not translated.
+  useEffect(() => {
+    setResult((prev) =>
+      prev ? calculateSupplies({ people, days, climate, activityLevel }) : prev
+    );
+    // Deliberately only `locale`: adding the inputs here would recalculate as
+    // the user adjusts them and defeat the Calculate button.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locale]);
 
   const toggleCategory = useCallback((categoryName: string) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -325,7 +348,7 @@ export default function CalculatorScreen() {
         {/* ── Input Card ─────────────────────────────────────── */}
         <View style={styles.inputCard}>
           <View style={styles.inputCardHeader}>
-            <Ionicons name="options-outline" size={16} color={Colors.amber} />
+            <Ionicons name="options-outline" size={16} color={colors.amber} />
             <Text style={styles.inputCardTitle}>{t('calc_parameters')}</Text>
           </View>
 
@@ -336,6 +359,8 @@ export default function CalculatorScreen() {
             min={1}
             max={50}
             onValueChange={setPeople}
+            colors={colors}
+            styles={styles}
           />
 
           <View style={styles.divider} />
@@ -348,6 +373,8 @@ export default function CalculatorScreen() {
             max={365}
             onValueChange={setDays}
             suffix={days === 1 ? t('calc_day_singular') : t('calc_day_plural')}
+            colors={colors}
+            styles={styles}
           />
           <View style={styles.presetRow}>
             {DAY_PRESETS.map((preset) => (
@@ -408,7 +435,7 @@ export default function CalculatorScreen() {
                 <Ionicons
                   name={opt.icon}
                   size={16}
-                  color={climate === opt.value ? Colors.bg : Colors.textSecondary}
+                  color={climate === opt.value ? colors.bg : colors.textSecondary}
                 />
                 <Text
                   style={[
@@ -444,7 +471,7 @@ export default function CalculatorScreen() {
                   style={[
                     styles.pillText,
                     activityLevel === opt.value && {
-                      color: Colors.bg,
+                      color: colors.bg,
                       fontWeight: '700',
                     },
                   ]}
@@ -467,7 +494,7 @@ export default function CalculatorScreen() {
           onPressOut={() => setIsCalculatePressed(false)}
           onPress={handleCalculate}
         >
-          <Ionicons name="calculator" size={22} color={Colors.bg} />
+          <Ionicons name="calculator" size={22} color={colors.bg} />
           <Text style={styles.calculateButtonText}>{t('calc_btn_calculate')}</Text>
         </TouchableOpacity>
 
@@ -477,28 +504,31 @@ export default function CalculatorScreen() {
             {/* Summary Card */}
             <View style={styles.summaryCard}>
               <View style={styles.summaryIconRow}>
-                <Ionicons name="clipboard-outline" size={20} color={Colors.amber} />
+                <Ionicons name="clipboard-outline" size={20} color={colors.amber} />
                 <Text style={styles.summaryTitle}>{t('calc_summary_title')}</Text>
               </View>
               <Text style={styles.summaryText}>
-                {result.input.people}{' '}
-                {result.input.people === 1 ? t('calc_person_singular') : t('calc_person_plural')}{' '}
-                {t('calc_for')}{' '}
-                {result.input.days}{' '}
-                {result.input.days === 1 ? t('calc_day_singular') : t('calc_day_plural')}{' '}
-                {t('calc_in')}{' '}
-                {result.input.climate === 'temperate' ? t('climate_temperate') : result.input.climate === 'hot' ? t('climate_hot') : t('climate_cold')}{' '}
-                {t('calc_climate_label')}
+                {tFormat('calc_summary_sentence', {
+                  people: result.input.people,
+                  personWord:
+                    result.input.people === 1 ? t('calc_person_singular') : t('calc_person_plural'),
+                  days: result.input.days,
+                  dayWord:
+                    result.input.days === 1 ? t('calc_day_singular') : t('calc_day_plural'),
+                  climate: t(`climate_${result.input.climate}`),
+                })}
               </Text>
               <View style={styles.summaryMeta}>
                 <View style={styles.summaryMetaItem}>
-                  <Ionicons name="fitness-outline" size={14} color={Colors.textSecondary} />
+                  <Ionicons name="fitness-outline" size={14} color={colors.textSecondary} />
                   <Text style={styles.summaryMetaText}>
-                    {t(`activity_${result.input.activityLevel}`)} {t('calc_activity_label')}
+                    {tFormat('calc_activity_sentence', {
+                      activity: t(`activity_${result.input.activityLevel}`),
+                    })}
                   </Text>
                 </View>
                 <View style={styles.summaryMetaItem}>
-                  <Ionicons name="cube-outline" size={14} color={Colors.textSecondary} />
+                  <Ionicons name="cube-outline" size={14} color={colors.textSecondary} />
                   <Text style={styles.summaryMetaText}>
                     {totalItems} {t('calc_items_total')}
                   </Text>
@@ -544,6 +574,8 @@ export default function CalculatorScreen() {
                 onToggle={() => toggleCategory(category.key)}
                 checkedItems={checkedItems}
                 onToggleItem={toggleItem}
+                colors={colors}
+                styles={styles}
               />
             ))}
 
@@ -554,7 +586,7 @@ export default function CalculatorScreen() {
                   <Ionicons
                     name="information-circle-outline"
                     size={16}
-                    color={Colors.cyan}
+                    color={colors.cyan}
                   />
                   <Text style={styles.notesSectionTitle}>{t('calc_notes_title')}</Text>
                 </View>
@@ -563,7 +595,7 @@ export default function CalculatorScreen() {
                     <Ionicons
                       name="chevron-forward"
                       size={14}
-                      color={Colors.cyan}
+                      color={colors.cyan}
                       style={styles.noteIcon}
                     />
                     <Text style={styles.noteText}>{note}</Text>
@@ -578,7 +610,7 @@ export default function CalculatorScreen() {
               activeOpacity={0.7}
               onPress={handleExport}
             >
-              <Ionicons name="share-outline" size={18} color={Colors.amber} />
+              <Ionicons name="share-outline" size={18} color={colors.amber} />
               <Text style={styles.exportButtonText}>{t('calc_export_btn')}</Text>
             </TouchableOpacity>
           </View>

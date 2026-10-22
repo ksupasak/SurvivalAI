@@ -298,11 +298,15 @@ export function sendMessage(text: string) {
 
 export function disconnect() {
   if (server) {
-    try { server.close(); } catch {}
+    try { server.close(); } catch {
+    /* already closed */
+  }
     server = null;
   }
   if (clientSocket) {
-    try { clientSocket.destroy(); } catch {}
+    try { clientSocket.destroy(); } catch {
+    /* already closed */
+  }
     clientSocket = null;
   }
   connectedSockets.clear();

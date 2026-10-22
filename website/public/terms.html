@@ -173,9 +173,11 @@
       <li><strong>Offline AI Chat</strong> — On-device large language model (LLM via <code>llama.rn</code>) with survival knowledge covering first aid, shelter, water, navigation, and more. Optional online mode via a user-supplied API key.</li>
       <li><strong>Supply Calculator</strong> — Calculates water, food, first-aid, hygiene, shelter, and tool quantities based on group size, duration, climate, and activity level.</li>
       <li><strong>Morse Code SOS</strong> — Transmits Morse code via device flashlight; receives and decodes Morse code light signals via the rear camera with an adjustable sensitivity targeting reticle.</li>
-      <li><strong>Seeking Mode</strong> — Broadcasts a Bluetooth Low Energy (BLE) rescue beacon containing optional emergency profile data and GPS coordinates. Includes an audio beacon and battery-preservation screen-dimming.</li>
-      <li><strong>Emergency Profile</strong> — Locally stores personal medical data (name, blood type, allergies, medications, emergency contacts) for BLE and Morse transmission.</li>
-      <li><strong>Document Library</strong> — Downloads official government survival manuals (FEMA, Red Cross, FM 21-76, WHO) for fully offline reference.</li>
+      <li><strong>Seeking Mode</strong> — Broadcasts a rescue beacon over your local WiFi network (UDP), containing optional emergency profile data and GPS coordinates, and scans for beacons from other devices on that network. Includes an audio beacon and battery-preservation screen-dimming.</li>
+      <li><strong>Room Chat</strong> — Peer-to-peer text chat between devices on the same local network, with no internet connection and no server.</li>
+      <li><strong>Field Notes</strong> — Offline note-taking stored on your device.</li>
+      <li><strong>Message Board</strong> — Optional public bulletin board. Requires a board server to be configured; it is not enabled by default. Posts you publish are transmitted to and stored on that server.</li>
+      <li><strong>Emergency Profile</strong> — Locally stores personal medical data (name, blood type, allergies, medications, emergency contacts) for rescue-beacon and Morse transmission.</li>
     </ul>
     <p>The Service is provided free of charge, with no subscription or in-app purchases. The App is not a medical device, a licensed emergency communication system, or a substitute for professional rescue services.</p>
   </div>
@@ -199,13 +201,42 @@
     <p>You are granted a personal, non-transferable, non-exclusive licence to install and use the App on devices you own or control, for lawful personal preparedness and emergency assistance purposes.</p>
     <h3>You agree NOT to:</h3>
     <ul class="item-list">
-      <li>Transmit false, fraudulent, or malicious SOS signals, distress calls, or BLE beacon data that could mislead rescue personnel</li>
+      <li>Transmit false, fraudulent, or malicious SOS signals, distress calls, or rescue-beacon data that could mislead rescue personnel</li>
       <li>Use the App to harass, deceive, or endanger other individuals</li>
       <li>Reverse-engineer, decompile, or disassemble the App beyond what is expressly permitted by applicable law</li>
       <li>Distribute, resell, or sublicense the App or any portion of it without written permission</li>
       <li>Remove, alter, or obscure copyright, trademark, or other proprietary notices</li>
       <li>Use the App in violation of any applicable law or regulation, including laws governing radio communications, emergency signalling, or export controls</li>
     </ul>
+
+    <h3>User-Generated Content &mdash; Message Board</h3>
+    <p>The optional Message Board lets you publish text that other users can read. You remain
+    responsible for everything you post, and you confirm you have the right to publish it.</p>
+    <p>There is <strong>zero tolerance</strong> for objectionable content. You agree not to post:</p>
+    <ul class="item-list">
+      <li>Content that is unlawful, defamatory, hateful, harassing, threatening, or that incites violence</li>
+      <li>Sexually explicit material, or any content involving or depicting minors inappropriately</li>
+      <li>False emergency or rescue information that could endanger life or misdirect responders</li>
+      <li>Another person's private data &mdash; medical details, contact information, or location &mdash; without their consent</li>
+      <li>Spam, advertising, malware, or links intended to deceive</li>
+      <li>Impersonation of any person, authority, relief agency, or emergency service</li>
+    </ul>
+    <p>Posts are public. Do not publish anything you would not put on a public noticeboard.</p>
+
+    <h3>Reporting and Blocking</h3>
+    <p>Every post that is not your own carries a menu offering <strong>Report this post</strong> and
+    <strong>Block this author</strong>.</p>
+    <ul class="item-list">
+      <li><strong>Reporting</strong> flags the post for review and immediately removes it from your own view. Once a small number of separate devices have reported the same post, it is hidden from everyone pending review.</li>
+      <li><strong>Blocking</strong> hides all posts from that display name on your device.</li>
+      <li>You may delete any post you created at any time, from the board itself.</li>
+      <li>Reported content is reviewed and, where it breaches these Terms, removed. We aim to act on reports within 24 hours.</li>
+      <li>We may remove content and bar a device from posting, without notice, for any breach of this section.</li>
+    </ul>
+    <p>To escalate something urgent, or to report content that the in-app control does not cover,
+    use the contact channel in <a href="#s13" style="color:var(--cyan)">Section 13</a>.</p>
+    <p>By using the Message Board you agree to these terms and to there being no tolerance for
+    objectionable content or abusive users.</p>
   </div>
 
   <!-- 5 -->
@@ -236,12 +267,17 @@
         <tr>
           <td>ACCESS_FINE_LOCATION<br>ACCESS_COARSE_LOCATION<br><em>(iOS: Location When In Use)</em></td>
           <td>Location</td>
-          <td>Optionally embeds GPS coordinates in the BLE rescue beacon during Seeking Mode. Location data is never uploaded to any server.</td>
+          <td>Optionally embeds GPS coordinates in the WiFi rescue beacon during Seeking Mode. Coordinates are broadcast on the local network only and are never uploaded to any server.</td>
         </tr>
         <tr>
-          <td>BLUETOOTH<br>BLUETOOTH_ADMIN<br>BLUETOOTH_CONNECT<br>BLUETOOTH_ADVERTISE<br><em>(iOS: Bluetooth Always)</em></td>
-          <td>Bluetooth (BLE)</td>
-          <td>Broadcasting the Seeking Mode rescue beacon. The App advertises only; it does not scan for or connect to other devices.</td>
+          <td>ACCESS_WIFI_STATE<br>ACCESS_NETWORK_STATE<br><em>(iOS: Local Network)</em></td>
+          <td>Local network</td>
+          <td>Broadcasting and detecting the Seeking Mode rescue beacon, and hosting or joining Room Chat. Traffic stays on your local network.</td>
+        </tr>
+        <tr>
+          <td>POST_NOTIFICATIONS<br><em>(iOS: Notifications)</em></td>
+          <td>Notifications</td>
+          <td>Requested only if you subscribe to Message Board updates. Your push token is stored by the board server so it can notify you, and is deleted when you unsubscribe.</td>
         </tr>
       </tbody>
     </table>
@@ -326,6 +362,9 @@
     <div class="section-num">Section 13</div>
     <h2>Contact</h2>
     <p>For questions, concerns, or notices regarding these Terms, please open an issue on the SurvivalAI public GitHub repository or contact us through the official website. We aim to respond within 7 business days.</p>
+    <p><strong>Reports of objectionable content or abusive users on the Message Board are handled
+    separately and reviewed within 24 hours.</strong> Use the in-app <em>Report</em> control where
+    possible, as it carries the information needed to locate the post.</p>
     <p>See also: <a href="privacy.html" style="color:var(--cyan)">Privacy Policy</a></p>
   </div>
 

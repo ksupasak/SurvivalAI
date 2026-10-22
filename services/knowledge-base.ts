@@ -866,24 +866,55 @@ function extractEnglishKeywords(query: string): string[] {
 }
 
 /**
+ * Words that carry no topical signal. Almost every entry in the knowledge base
+ * is phrased as "How do I ...", so leaving these in let them outscore the terms
+ * the user actually cares about.
+ */
+const STOP_WORDS = new Set([
+  'the', 'and', 'for', 'are', 'but', 'not', 'you', 'all', 'can', 'her', 'was',
+  'one', 'our', 'out', 'his', 'has', 'how', 'its', 'who', 'did', 'get', 'may',
+  'him', 'old', 'see', 'now', 'way', 'use', 'any', 'she', 'two', 'too', 'does',
+  'do', 'to', 'of', 'in', 'is', 'it', 'on', 'at', 'as', 'by', 'or', 'be', 'an',
+  'if', 'my', 'me', 'we', 'so', 'up', 'no', '什么', 'what', 'when', 'where',
+  'which', 'should', 'would', 'could', 'about', 'from', 'with', 'that', 'this',
+  'have', 'need', 'want', 'make', 'best', 'good',
+]);
+
+/** Lowercase, strip punctuation, drop stop words and single characters. */
+function tokenize(text: string): string[] {
+  return text
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+    .split(/\s+/)
+    .filter((word) => word.length > 1 && !STOP_WORDS.has(word));
+}
+
+/** True when `token` appears in `tokens` as a whole word. */
+function hasWord(tokens: string[], token: string): boolean {
+  return tokens.includes(token);
+}
+
+/**
  * Search the knowledge base by matching query words against tags and question text.
  * Returns the top 5 results scored by relevance.
  *
  * Supports multilingual queries — non-English words are mapped to English
  * equivalents via MULTILINGUAL_KEYWORDS before searching.
  *
- * Scoring:
- * - Exact tag match: 3 points per matching tag
- * - Partial tag match (tag contains query word): 2 points
- * - Question text contains query word: 1 point per occurrence
- * - Answer text contains query word: 0.5 points
+ * Matching is whole-word on both sides. Substring matching was previously used
+ * for tags, which meant a query word like "do" scored against every tag
+ * containing it ("shadow", "dose", "door") and buried the real answer.
+ *
+ * Scoring, per query word:
+ * - Exact tag match: 3
+ * - Tag word match (multi-word tag containing the word): 2
+ * - Question contains the word: 1.5
+ * - Answer contains the word: 0.5
+ * Entries matching more distinct query words are then preferred, so a query's
+ * specific terms outrank an entry that merely repeats one of them.
  */
 export function searchKnowledge(query: string): KnowledgeEntry[] {
-  // Split English words from query
-  const rawWords = query
-    .toLowerCase()
-    .split(/\s+/)
-    .filter((word) => word.length > 1);
+  const rawWords = tokenize(query);
 
   // Extract translated English keywords from multilingual content
   const translatedKeywords = extractEnglishKeywords(query);
@@ -896,33 +927,37 @@ export function searchKnowledge(query: string): KnowledgeEntry[] {
   }
 
   const scored = entries.map((entry) => {
+    const questionTokens = tokenize(entry.q);
+    const answerTokens = tokenize(entry.a);
+    const tagTokens = entry.tags.map((tag) => ({
+      full: tag.toLowerCase(),
+      words: tokenize(tag),
+    }));
+
     let score = 0;
-    const questionLower = entry.q.toLowerCase();
-    const answerLower = entry.a.toLowerCase();
+    let matchedWords = 0;
 
     for (const word of queryWords) {
-      // Check tags for exact match (highest relevance)
-      for (const tag of entry.tags) {
-        const tagLower = tag.toLowerCase();
-        if (tagLower === word) {
-          score += 3;
-        } else if (tagLower.includes(word) || word.includes(tagLower)) {
-          score += 2;
+      let wordScore = 0;
+
+      for (const tag of tagTokens) {
+        if (tag.full === word) {
+          wordScore += 3;
+        } else if (hasWord(tag.words, word)) {
+          wordScore += 2;
         }
       }
 
-      // Check question text
-      if (questionLower.includes(word)) {
-        score += 1;
-      }
+      if (hasWord(questionTokens, word)) wordScore += 1.5;
+      if (hasWord(answerTokens, word)) wordScore += 0.5;
 
-      // Check answer text (lower weight)
-      if (answerLower.includes(word)) {
-        score += 0.5;
-      }
+      if (wordScore > 0) matchedWords += 1;
+      score += wordScore;
     }
 
-    return { entry, score };
+    // Breadth of match beats depth: an entry hitting "purify" and "water"
+    // should rank above one that only repeats "water" in several places.
+    return { entry, score: score * (1 + matchedWords * 0.5), matchedWords };
   });
 
   return scored

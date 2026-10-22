@@ -84,7 +84,7 @@ export default function ProfileScreen() {
     ]);
   };
 
-  const handlePreviewBLE = () => {
+  const handlePreviewBeacon = () => {
     const data: Record<string, string> = {};
     if (fullName) data['Name'] = fullName;
     if (bloodType) data['Blood Type'] = bloodType;
@@ -101,7 +101,7 @@ export default function ProfileScreen() {
             .join('\n')
         : 'No profile data to broadcast.';
 
-    Alert.alert('BLE Broadcast Preview', `Data that would be included in beacon:\n\n${preview}`, [
+    Alert.alert('Beacon Broadcast Preview', `Data that would be included in beacon:\n\n${preview}`, [
       { text: 'OK' },
     ]);
   };
@@ -166,8 +166,8 @@ export default function ProfileScreen() {
           </View>
           <Text style={styles.headerSubtitle}>Medical & Emergency Information</Text>
           <Text style={styles.headerInfo}>
-            This information is shared with rescuers via BLE beacon and can be encoded as Morse
-            code signals
+            This information is shared with rescuers via the WiFi rescue beacon and can be
+            encoded as Morse code signals
           </Text>
         </View>
 
@@ -373,10 +373,10 @@ export default function ProfileScreen() {
             <Text style={styles.actionButtonText}>Send via Morse Code</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.actionButton} onPress={handlePreviewBLE}>
+          <TouchableOpacity style={styles.actionButton} onPress={handlePreviewBeacon}>
             <Ionicons name="radio-outline" size={20} color={Colors.cyan} />
             <Text style={[styles.actionButtonText, { color: Colors.cyan }]}>
-              Preview BLE Broadcast Data
+              Preview Beacon Broadcast Data
             </Text>
           </TouchableOpacity>
 
@@ -394,8 +394,8 @@ export default function ProfileScreen() {
           </View>
           <Text style={styles.pdpaDesc}>
             Your personal data is stored locally on this device only and is never uploaded to any
-            server. Data shared via BLE beacon or Morse code is transmitted only when you initiate
-            it.
+            server. Data shared via the WiFi rescue beacon or Morse code is broadcast on your local
+            network only when you start it yourself.
           </Text>
           <TouchableOpacity
             style={styles.pdpaLinkButton}
@@ -416,7 +416,7 @@ export default function ProfileScreen() {
             <Text style={styles.compactCardTitle}>EMERGENCY BROADCAST SUMMARY</Text>
           </View>
           <Text style={styles.compactCardInfo}>
-            Transmitted via BLE beacon and Morse code
+            Transmitted via WiFi rescue beacon and Morse code
           </Text>
           <View style={styles.compactCardContent}>
             <Text style={styles.compactCardData}>{compactSummary}</Text>

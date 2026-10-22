@@ -18,8 +18,16 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Spacing, FontSize, BorderRadius, type ColorScheme } from '@/constants/theme';
 import { useTheme } from '@/contexts/ThemeContext';
-import { getResponse, clearChatHistory, type ChatMode, isOfflineLlmReady, initOfflineLlm, releaseOfflineLlm, subscribeLlmStatus, type LlmStatus } from '@/services/llm';
-import { speak, stopSpeaking } from '@/services/voice';
+import { getResponse, clearChatHistory, type ChatMode, isOfflineLlmReady, initOfflineLlm, releaseOfflineLlm, subscribeLlmStatus, OFFLINE_LLM_SUPPORTED, type LlmStatus } from '@/services/llm';
+import {
+  speak,
+  stopSpeaking,
+  startListening,
+  stopListening,
+  abortListening,
+  isSttAvailable,
+  type SttError,
+} from '@/services/voice';
 import { setApiKey, hasApiKey, getCustomServerUrl, setCustomServerUrl, getCustomModel, setCustomModel } from '@/services/settings';
 import { useLocale, t } from '@/services/i18n';
 import {
@@ -111,7 +119,7 @@ function formatDate(ts: number): string {
 // ─── Pulsing Mic Indicator ───────────────────────────────────────────────────
 
 function PulsingIndicator({ color }: { color: string }) {
-  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const [pulseAnim] = useState(() => new Animated.Value(1));
   useEffect(() => {
     const animation = Animated.loop(
       Animated.sequence([
@@ -128,9 +136,9 @@ function PulsingIndicator({ color }: { color: string }) {
 // ─── Typing Indicator ────────────────────────────────────────────────────────
 
 function TypingIndicator({ colors }: { colors: ColorScheme }) {
-  const dot1 = useRef(new Animated.Value(0)).current;
-  const dot2 = useRef(new Animated.Value(0)).current;
-  const dot3 = useRef(new Animated.Value(0)).current;
+  const [dot1] = useState(() => new Animated.Value(0));
+  const [dot2] = useState(() => new Animated.Value(0));
+  const [dot3] = useState(() => new Animated.Value(0));
   useEffect(() => {
     const mk = (dot: Animated.Value, delay: number) =>
       Animated.loop(Animated.sequence([
@@ -579,7 +587,12 @@ export default function ChatScreen() {
   };
 
   const handleDownloadModel = async (model: ModelInfo) => {
-    try { await downloadModel(model); await initOfflineLlm(model); } catch {}
+    try {
+      await downloadModel(model);
+      await initOfflineLlm(model);
+    } catch (e) {
+      Alert.alert(t('model_download_failed'), String(e), [{ text: t('ok') }]);
+    }
   };
 
   const handleDeleteModel = async (model: ModelInfo) => {
@@ -591,9 +604,19 @@ export default function ChatScreen() {
   };
 
   // ── Mode options ──────────────────────────────────────────────────────
+  // Hide the on-device option entirely when llama.rn is not in the build —
+  // showing a mode that can never work is worse than not offering it.
   const modeOptions = [
     { key: 'knowledge' as ChatMode, label: t('mode_knowledge'), available: true },
-    { key: 'offline-llm' as ChatMode, label: t('mode_offline_llm'), available: offlineLlmAvailable || downloadedModels.size > 0 },
+    ...(OFFLINE_LLM_SUPPORTED
+      ? [
+          {
+            key: 'offline-llm' as ChatMode,
+            label: t('mode_offline_llm'),
+            available: offlineLlmAvailable || downloadedModels.size > 0,
+          },
+        ]
+      : []),
     { key: 'online' as ChatMode, label: t('mode_online'), available: onlineAvailable },
   ];
 
@@ -615,7 +638,14 @@ export default function ChatScreen() {
       const aiMessage: ChatMessage = { id: generateId(), text: response, sender: 'ai', timestamp: new Date(), mode: currentMode };
       setMessages((prev) => [...prev, aiMessage]);
       scrollToBottom();
-      if (voiceEnabled) { try { await speak(response); } catch {} }
+      // Read-aloud is a convenience; a TTS failure must not swallow the reply.
+      if (voiceEnabled) {
+        try {
+          await speak(response);
+        } catch {
+          /* engine unavailable or interrupted */
+        }
+      }
     } catch {
       setMessages((prev) => [...prev, { id: generateId(), text: t('chat_error'), sender: 'ai', timestamp: new Date(), mode: currentMode }]);
       scrollToBottom();
@@ -664,11 +694,43 @@ export default function ChatScreen() {
 
   const toggleVoice = useCallback(() => { if (voiceEnabled) stopSpeaking(); setVoiceEnabled((p) => !p); }, [voiceEnabled]);
 
-  const toggleListening = useCallback(() => {
-    if (isListening) { setIsListening(false); return; }
+  // Interim transcripts overwrite each other in the input box; the final one
+  // is left there for the user to edit or send, rather than auto-sending.
+  const handleSttError = useCallback((err: SttError) => {
+    setIsListening(false);
+    if (err.code === 'no-speech') return; // silence is not worth an alert
+    const message =
+      err.code === 'unavailable'
+        ? t('voice_unavailable')
+        : err.code === 'permission-denied'
+          ? t('voice_permission_denied')
+          : err.message;
+    Alert.alert(t('voice_input'), message, [{ text: t('ok') }]);
+  }, [locale]);
+
+  const toggleListening = useCallback(async () => {
+    if (isListening) {
+      stopListening();
+      setIsListening(false);
+      return;
+    }
+    if (!isSttAvailable()) {
+      Alert.alert(t('voice_input'), t('voice_unavailable'), [{ text: t('ok') }]);
+      return;
+    }
     setIsListening(true);
-    setTimeout(() => { setIsListening(false); Alert.alert(t('voice_input'), t('voice_coming_soon'), [{ text: t('ok') }]); }, 2000);
-  }, [isListening, locale]);
+    await startListening(
+      (text, isFinal) => {
+        setInputText(text);
+        if (isFinal) setIsListening(false);
+      },
+      handleSttError,
+      { locale }
+    );
+  }, [isListening, locale, handleSttError]);
+
+  // Release the recognizer if the screen goes away mid-utterance.
+  useEffect(() => () => abortListening(), []);
 
   // ── Thread handlers ───────────────────────────────────────────────────
   const handleNewThread = useCallback(() => {

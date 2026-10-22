@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,9 @@ import { useRouter } from 'expo-router';
 import { Spacing, FontSize, BorderRadius, type ColorScheme } from '@/constants/theme';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLocale, t, setLocale, SUPPORTED_LOCALES, type SupportedLocale, type LocaleInfo } from '@/services/i18n';
+import * as Network from 'expo-network';
+import * as Location from 'expo-location';
+import { getBatteryLevel, subscribeToBattery } from '@/services/battery';
 
 type IoniconsName = keyof typeof Ionicons.glyphMap;
 
@@ -36,9 +39,43 @@ export default function HomeScreen() {
   const router = useRouter();
   const locale = useLocale();
   const { colors, isDark, toggleTheme } = useTheme();
-  const [isOnline] = useState(true);
-  const [batteryLevel] = useState(87);
-  const [gpsActive] = useState(true);
+  // These three read the device for real. They used to be hardcoded to
+  // "online / 87% / active", which is a dangerous thing to fake in an app
+  // people may rely on to judge whether they can still call for help.
+  const networkState = Network.useNetworkState();
+  const isOnline = networkState.isConnected === true;
+
+  const [batteryLevel, setBatteryLevel] = useState(0);
+  useEffect(() => {
+    getBatteryLevel().then(setBatteryLevel).catch(() => {
+      /* battery API unavailable on this platform */
+    });
+    return subscribeToBattery(setBatteryLevel);
+  }, []);
+
+  const [gpsActive, setGpsActive] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    // getForegroundPermissionsAsync only reads the current state, so opening
+    // the home screen never triggers a permission prompt.
+    const check = async () => {
+      try {
+        const [permission, servicesEnabled] = await Promise.all([
+          Location.getForegroundPermissionsAsync(),
+          Location.hasServicesEnabledAsync(),
+        ]);
+        if (!cancelled) setGpsActive(permission.granted && servicesEnabled);
+      } catch {
+        if (!cancelled) setGpsActive(false);
+      }
+    };
+    check();
+    const id = setInterval(check, 15000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, []);
   const [showLanguagePicker, setShowLanguagePicker] = useState(false);
 
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -106,7 +143,7 @@ export default function HomeScreen() {
             {[
               { label: 'NET', value: isOnline ? t('status_online').toUpperCase() : t('status_offline').toUpperCase(), color: isOnline ? colors.online : colors.offline, icon: isOnline ? 'wifi' : 'wifi-outline' as IoniconsName },
               { label: 'BAT', value: `${batteryLevel}%`, color: getBatteryColor(batteryLevel), icon: 'battery-charging' as IoniconsName },
-              { label: 'GPS', value: gpsActive ? 'ACTIVE' : 'INACTIVE', color: gpsActive ? colors.green : colors.red, icon: 'location' as IoniconsName },
+              { label: 'GPS', value: gpsActive ? t('status_active').toUpperCase() : t('status_inactive').toUpperCase(), color: gpsActive ? colors.green : colors.red, icon: 'location' as IoniconsName },
             ].map((item, i) => (
               <React.Fragment key={item.label}>
                 {i > 0 && <View style={styles.statusDivider} />}

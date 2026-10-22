@@ -185,7 +185,7 @@
       <li><a href="#p2">Data We Never Collect</a></li>
       <li><a href="#p3">Data Stored on Your Device</a></li>
       <li><a href="#p4">Device Permissions &amp; Data Flow</a></li>
-      <li><a href="#p5">BLE Beacon (Seeking Mode)</a></li>
+      <li><a href="#p5">Data You Choose to Broadcast or Publish</a></li>
       <li><a href="#p6">Third-Party Services</a></li>
       <li><a href="#p7">This Website</a></li>
       <li><a href="#p8">PDPA Compliance (Thailand)</a></li>
@@ -217,13 +217,17 @@
       <li>Camera footage, images, or video from your device</li>
       <li>Audio recordings or microphone data</li>
       <li>AI chat history or conversation content</li>
-      <li>BLE beacon transmissions or their content</li>
+      <li>Rescue beacon transmissions or their content</li>
       <li>App usage patterns, session duration, or feature usage analytics</li>
       <li>Crash reports or diagnostic telemetry</li>
       <li>Device identifiers (IMEI, advertising ID, IDFA, Android ID)</li>
       <li>IP address or network information (App)</li>
     </ul>
-    <p>We have deliberately built no server infrastructure that could receive this data.</p>
+    <p>None of the above is collected by any system under our control.</p>
+    <div class="notice"><p><strong>One exception, and it is deliberate:</strong> the optional
+    <strong>Message Board</strong> is a publishing feature, so anything you post there is
+    transmitted to and stored on a board server by design. Nothing else in the App does this.
+    See <a href="#p5">Section 05</a> for exactly what a post contains.</p></div>
   </div>
 
   <!-- 3 -->
@@ -275,7 +279,8 @@
   <div class="section" id="p4">
     <div class="section-num">Section 04</div>
     <h2>Device Permissions &amp; Data Flow</h2>
-    <p>The App requires the following permissions. All data accessed via these permissions is processed on-device and never transmitted to us.</p>
+    <p>The App requests only the permissions listed below. Data accessed through them is processed on-device and is not transmitted to us, except where a row says otherwise.</p>
+    <p>The App does <strong>not</strong> use Bluetooth, background location, or access to your photos, files or contacts, and does not request those permissions.</p>
     <table class="perm-table">
       <thead>
         <tr><th>Permission</th><th>Feature</th><th>What Happens to the Data</th></tr>
@@ -294,17 +299,17 @@
         <tr>
           <td>ACCESS_FINE_LOCATION<br>ACCESS_COARSE_LOCATION<br><em>NSLocationWhenInUseUsageDescription</em></td>
           <td>Seeking Mode beacon</td>
-          <td>GPS coordinates are embedded in the BLE advertisement packet only while Seeking Mode is active, and only if you have granted location permission. Coordinates are never uploaded to any server.</td>
+          <td>GPS coordinates are embedded in the WiFi beacon packet only while Seeking Mode is active, and only if you have granted location permission. Coordinates are broadcast on your local network only &mdash; they are never uploaded to any server, and the Message Board does not attach them to posts.</td>
         </tr>
         <tr>
-          <td>BLUETOOTH / BLE<br><em>NSBluetoothAlwaysUsageDescription</em></td>
-          <td>Seeking Mode BLE beacon</td>
-          <td>The App advertises (broadcasts) a BLE packet containing your selected Emergency Profile fields. It does not scan for or connect to any devices. Broadcast is active only when Seeking Mode is on.</td>
+          <td>Local Network access<br><em>NSLocalNetworkUsageDescription</em></td>
+          <td>Seeking Mode beacon, Room chat</td>
+          <td>The App broadcasts and listens for beacon packets over your local WiFi network, and hosts or joins peer-to-peer chat on it. Traffic stays on that network and reaches no server of ours. Active only while you have Seeking Mode or Room chat on.</td>
         </tr>
         <tr>
-          <td>FLASHLIGHT</td>
-          <td>Morse Send mode</td>
-          <td>Controls the device torch LED only. No data is read or stored.</td>
+          <td>POST_NOTIFICATIONS<br><em>(iOS: Notifications)</em></td>
+          <td>Message Board subscriptions</td>
+          <td>Requested only when you subscribe to the board &mdash; not at launch. A push token is sent to the board server so it can notify you of new posts. Unsubscribing deletes it.</td>
         </tr>
       </tbody>
     </table>
@@ -314,16 +319,44 @@
   <!-- 5 -->
   <div class="section" id="p5">
     <div class="section-num">Section 05</div>
-    <h2>BLE Beacon — Seeking Mode</h2>
-    <p>When you activate Seeking Mode, the App broadcasts a Bluetooth Low Energy (BLE) advertisement packet. This is important to understand:</p>
+    <h2>Data You Choose to Broadcast or Publish</h2>
+    <p>Two features transmit data off your device. Both are off until you turn them on.</p>
+
+    <h3>Rescue Beacon &mdash; Seeking Mode</h3>
+    <p>When you activate Seeking Mode, the App broadcasts a packet over your local WiFi network
+    (UDP, port 9876) so that other SurvivalAI devices on the same network can find you. It is not
+    a Bluetooth beacon.</p>
     <ul class="item-list">
-      <li><strong>One-way broadcast only</strong> — the App does not receive data from, or connect to, any other device</li>
-      <li><strong>You control the content</strong> — only fields you have filled in your Emergency Profile are included; empty fields are excluded</li>
-      <li><strong>You control the timing</strong> — the beacon is only active when you explicitly turn on Seeking Mode; it stops the moment you turn it off or close the App</li>
-      <li><strong>Nearby devices may detect it</strong> — any BLE scanner within range (~10–50 m) can detect the advertisement. This is intentional — it is the rescue-detection mechanism</li>
-      <li><strong>We cannot see it</strong> — we have no infrastructure that receives or logs BLE broadcasts</li>
+      <li><strong>One-way broadcast only</strong> &mdash; the App does not connect to, or receive data from, any other device</li>
+      <li><strong>You control the content</strong> &mdash; only fields you have filled in your Emergency Profile are included; empty fields are excluded</li>
+      <li><strong>You control the timing</strong> &mdash; the beacon is only active while Seeking Mode is on; it stops the moment you turn it off or close the App</li>
+      <li><strong>Anyone on the same network may detect it</strong> &mdash; this is intentional, it is the rescue-detection mechanism</li>
+      <li><strong>It does not leave the local network</strong> &mdash; a broadcast packet is not routed to the internet, and we operate nothing that receives it</li>
     </ul>
-    <p>Because BLE broadcasts are wireless and inherently detectable by nearby devices, activate Seeking Mode only when you intend to signal for rescue.</p>
+    <p>Because the broadcast is detectable by others on the network, activate Seeking Mode only
+    when you intend to signal for rescue.</p>
+
+    <h3>Message Board</h3>
+    <p>The Message Board is a public bulletin board. It is optional, it is not configured by
+    default, and it is the only feature that sends your data to a server.</p>
+    <p>When you publish a post, the following is transmitted and stored on the board server:</p>
+    <ul class="item-list">
+      <li>The <strong>title and message text</strong> you wrote</li>
+      <li>The <strong>display name</strong> you entered, or &ldquo;Anonymous&rdquo; if you left it blank</li>
+      <li>The <strong>category</strong> you selected</li>
+      <li>A <strong>free-text location</strong>, only if you typed one &mdash; your GPS coordinates are <em>not</em> attached</li>
+      <li>Your <strong>platform</strong> (iOS or Android)</li>
+      <li>A <strong>random identifier</strong> generated on your device, which exists so that you can delete your own posts. It is never shown to other users and is never returned by the server.</li>
+    </ul>
+    <p>If you subscribe to board notifications, your push token is also stored so the server can
+    notify you of new posts. Unsubscribing deletes it.</p>
+    <div class="notice"><p><strong>Treat the board as public.</strong> Posts are readable by anyone
+    using the same board server, and we cannot guarantee removal of content others have already
+    seen or copied. Do not post medical details, contact information, or anything you would not
+    put on a public noticeboard.</p></div>
+    <p>You may delete any post you created, from the board itself. The operator of the board
+    server you connect to is the data controller for its contents; if that server is not run by
+    us, this policy does not govern it.</p>
   </div>
 
   <!-- 6 -->
@@ -439,7 +472,7 @@
         </tr>
         <tr>
           <td>Restrict Processing</td>
-          <td>Revoke any permission (Camera, Location, Bluetooth, Microphone) in device system Settings to stop that feature's data access immediately</td>
+          <td>Revoke any permission (Camera, Location, Microphone, Local Network, Notifications) in device system Settings to stop that feature's data access immediately</td>
         </tr>
         <tr>
           <td>Withdraw Consent (BLE)</td>

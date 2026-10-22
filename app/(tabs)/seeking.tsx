@@ -21,7 +21,7 @@ import {
   stopBeacon,
   isBeaconActive,
   getBeaconStatus,
-} from '@/services/ble-beacon';
+} from '@/services/wifi-beacon';
 import { startAudioBeacon, stopAudioBeacon } from '@/services/audio-beacon';
 import { getBatteryLevel, estimateTimeRemaining } from '@/services/battery';
 
@@ -61,8 +61,8 @@ export default function SeekingScreen() {
   const [gpsAcquired, setGpsAcquired] = useState(false);
 
   // Animation
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-  const glowAnim = useRef(new Animated.Value(0.4)).current;
+  const [pulseAnim] = useState(() => new Animated.Value(1));
+  const [glowAnim] = useState(() => new Animated.Value(0.4));
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const savedBrightness = useRef<number | null>(null);
 
@@ -154,7 +154,9 @@ export default function SeekingScreen() {
           const current = await Brightness.getBrightnessAsync();
           savedBrightness.current = current;
           await Brightness.setBrightnessAsync(0.05);
-        } catch (_) {}
+        } catch {
+          /* brightness control unavailable on this device */
+        }
       })();
     } else if (savedBrightness.current !== null) {
       Brightness.setBrightnessAsync(savedBrightness.current).catch(() => {});
@@ -260,7 +262,7 @@ export default function SeekingScreen() {
             </Animated.View>
           </TouchableOpacity>
           <Text style={styles.activationDescription}>
-            Broadcasts your location and info via BLE & WiFi for rescue teams to detect
+            Broadcasts your location and info over local WiFi for rescue teams to detect
           </Text>
         </View>
 
@@ -312,7 +314,7 @@ export default function SeekingScreen() {
               <View style={styles.statusItem}>
                 <Text style={styles.statusLabel}>Signal Range</Text>
                 <Text style={[styles.statusValue, { color: Colors.textSecondary }]}>
-                  ~50m BLE / ~100m WiFi
+                  ~100m WiFi
                 </Text>
               </View>
             </View>
@@ -411,7 +413,7 @@ export default function SeekingScreen() {
             {[
               'Reducing screen brightness',
               'Disabling non-essential services',
-              'Using low-power BLE advertising',
+              'Lowering beacon broadcast rate',
               'Optimizing signal intervals',
             ].map((item, i) => (
               <View key={i} style={styles.bulletItem}>

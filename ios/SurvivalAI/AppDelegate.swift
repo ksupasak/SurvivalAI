@@ -1,4 +1,4 @@
-internal import Expo
+import Expo
 import React
 import ReactAppDependencyProvider
 
@@ -19,6 +19,10 @@ class AppDelegate: ExpoAppDelegate {
 
     reactNativeDelegate = delegate
     reactNativeFactory = factory
+    // ExpoAppDelegate keeps its own `factory` property and reads it from
+    // recreateRootView(). Storing the factory only in our own property leaves
+    // that one nil, which trips "Missing factory in ExpoAppDelegate" at launch.
+    bindReactNativeFactory(factory)
 
 #if os(iOS) || os(tvOS)
     window = UIWindow(frame: UIScreen.main.bounds)

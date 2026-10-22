@@ -1,15 +1,14 @@
 /**
  * Voice Input/Output Service
  *
- * Provides text-to-speech (TTS) using expo-speech and placeholder
- * speech-to-text (STT) functions.
+ * TTS via expo-speech, STT via expo-speech-recognition.
  *
- * TTS: Fully functional via expo-speech.
- * STT: Requires @react-native-voice/voice or expo-speech-recognition
- *       for real implementation. Placeholder functions are exported
- *       so the UI can be built against the interface.
+ * Both are native-only. STT additionally needs a custom dev client, so
+ * `isSttAvailable()` reports whether the module is actually present and every
+ * entry point fails soft when it is not.
  */
 
+import { Platform } from 'react-native';
 import * as Speech from 'expo-speech';
 
 // ─── Text-to-Speech (TTS) ───────────────────────────────────────────────────
@@ -58,81 +57,200 @@ export async function isSpeaking(): Promise<boolean> {
 
 // ─── Speech-to-Text (STT) ──────────────────────────────────────────────────
 //
-// NOTE: Real speech-to-text implementation requires a native module.
-// Recommended options:
-//
-// 1. @react-native-voice/voice
-//    - Most mature React Native STT library
-//    - Supports streaming recognition
-//    - npm install @react-native-voice/voice
-//    - Requires native linking and microphone permissions
-//
-// 2. expo-speech-recognition (community)
-//    - Expo-compatible wrapper
-//    - May have limited platform support
-//
-// The functions below are placeholders that maintain the expected interface
-// so the UI can be built and tested. Replace with real implementation
-// when a STT library is integrated.
+// Backed by expo-speech-recognition, which wraps SFSpeechRecognizer on iOS and
+// android.speech.SpeechRecognizer on Android. Requires a custom dev client —
+// the module is not present in Expo Go, so every entry point degrades to a
+// clear "unavailable" error rather than throwing.
+
+export type SttErrorCode =
+  | 'unavailable'
+  | 'permission-denied'
+  | 'no-speech'
+  | 'network'
+  | 'language-not-supported'
+  | 'unknown';
+
+export interface SttError {
+  code: SttErrorCode;
+  message: string;
+}
+
+/** BCP-47 tags for the app's supported locales, for the recognizer. */
+const STT_LANGUAGE_TAGS: Record<string, string> = {
+  en: 'en-US', th: 'th-TH', es: 'es-ES', fr: 'fr-FR',
+  zh: 'zh-CN', ja: 'ja-JP', ko: 'ko-KR', ar: 'ar-SA',
+  ru: 'ru-RU', de: 'de-DE', pt: 'pt-BR', hi: 'hi-IN',
+  it: 'it-IT', nl: 'nl-NL', tr: 'tr-TR', pl: 'pl-PL',
+  vi: 'vi-VN', id: 'id-ID', uk: 'uk-UA', sv: 'sv-SE',
+};
+
+export function toSpeechLanguageTag(locale: string): string {
+  return STT_LANGUAGE_TAGS[locale] ?? 'en-US';
+}
+
+type SpeechModule = typeof import('expo-speech-recognition').ExpoSpeechRecognitionModule;
+type Subscription = { remove: () => void };
+
+let _module: SpeechModule | null = null;
+let _moduleResolved = false;
+
+/** Native-only and dev-client-only; resolve lazily so web and Expo Go survive. */
+function getSpeechModule(): SpeechModule | null {
+  if (_moduleResolved) return _module;
+  _moduleResolved = true;
+  if (Platform.OS === 'web') return null;
+  try {
+    _module = require('expo-speech-recognition').ExpoSpeechRecognitionModule;
+  } catch {
+    _module = null;
+  }
+  return _module;
+}
+
+/** True when speech recognition can actually run on this build. */
+export function isSttAvailable(): boolean {
+  return getSpeechModule() !== null;
+}
 
 // STT state
 let listening = false;
-let onResultCallback: ((text: string) => void) | null = null;
-let onErrorCallback: ((error: string) => void) | null = null;
+let subscriptions: Subscription[] = [];
+
+function teardown(): void {
+  subscriptions.forEach((sub) => {
+    try {
+      sub.remove();
+    } catch {
+      /* listener already detached */
+    }
+  });
+  subscriptions = [];
+  listening = false;
+}
+
+/** Map the library's error codes onto ours, so callers can localise messages. */
+function mapErrorCode(code: string): SttErrorCode {
+  switch (code) {
+    case 'not-allowed':
+    case 'service-not-allowed':
+      return 'permission-denied';
+    case 'no-speech':
+      return 'no-speech';
+    case 'network':
+      return 'network';
+    case 'language-not-supported':
+      return 'language-not-supported';
+    default:
+      return 'unknown';
+  }
+}
+
+export interface StartListeningOptions {
+  /** App locale code, e.g. 'en' or 'th'. Mapped to a BCP-47 tag. */
+  locale?: string;
+  /** Emit partial transcripts while the user is still speaking. Default true. */
+  interimResults?: boolean;
+  /** Keep recognising after a pause instead of stopping at the first result. */
+  continuous?: boolean;
+}
 
 /**
  * Start listening for speech input.
  *
- * PLACEHOLDER: This is a stub. Real implementation requires
- * @react-native-voice/voice or similar native STT library.
- *
- * @param onResult - Callback invoked with recognized text
- * @param onError - Callback invoked if recognition fails
+ * `onResult` fires for interim transcripts too; `isFinal` marks the last one
+ * for an utterance. Recognition stops on its own after a final result unless
+ * `continuous` is set.
  */
-export function startListening(
-  onResult: (text: string) => void,
-  onError?: (error: string) => void
-): void {
+export async function startListening(
+  onResult: (text: string, isFinal: boolean) => void,
+  onError?: (error: SttError) => void,
+  options?: StartListeningOptions
+): Promise<void> {
   if (listening) {
     console.warn('[Voice] Already listening');
     return;
   }
 
-  listening = true;
-  onResultCallback = onResult;
-  onErrorCallback = onError ?? null;
-
-  console.log(
-    '[Voice] STT started (placeholder). Install @react-native-voice/voice for real speech recognition.'
-  );
-
-  // Simulate a timeout to show the placeholder is active
-  // In real implementation, this would start the native speech recognizer
-  setTimeout(() => {
-    if (listening && onErrorCallback) {
-      onErrorCallback(
-        'Speech recognition is not available. Install @react-native-voice/voice to enable this feature.'
-      );
-      listening = false;
-    }
-  }, 2000);
-}
-
-/**
- * Stop listening for speech input.
- *
- * PLACEHOLDER: This is a stub.
- */
-export function stopListening(): void {
-  if (!listening) {
+  const speech = getSpeechModule();
+  if (!speech) {
+    onError?.({
+      code: 'unavailable',
+      message: 'Speech recognition is not available on this build.',
+    });
     return;
   }
 
-  listening = false;
-  onResultCallback = null;
-  onErrorCallback = null;
+  try {
+    const permission = await speech.requestPermissionsAsync();
+    if (!permission.granted) {
+      onError?.({
+        code: 'permission-denied',
+        message: 'Microphone and speech recognition permission are required.',
+      });
+      return;
+    }
+  } catch (e) {
+    onError?.({ code: 'unknown', message: String(e) });
+    return;
+  }
 
-  console.log('[Voice] STT stopped (placeholder)');
+  listening = true;
+
+  subscriptions.push(
+    speech.addListener('result', (event) => {
+      const transcript = event.results?.[0]?.transcript ?? '';
+      if (transcript) onResult(transcript, event.isFinal);
+    })
+  );
+
+  subscriptions.push(
+    speech.addListener('error', (event) => {
+      const code = mapErrorCode(event.error);
+      teardown();
+      onError?.({ code, message: event.message || event.error });
+    })
+  );
+
+  subscriptions.push(
+    speech.addListener('end', () => {
+      teardown();
+    })
+  );
+
+  try {
+    speech.start({
+      lang: toSpeechLanguageTag(options?.locale ?? 'en'),
+      interimResults: options?.interimResults ?? true,
+      continuous: options?.continuous ?? false,
+      addsPunctuation: true,
+    });
+  } catch (e) {
+    teardown();
+    onError?.({ code: 'unknown', message: String(e) });
+  }
+}
+
+/** Stop listening and let the recognizer return one last final result. */
+export function stopListening(): void {
+  if (!listening) return;
+  const speech = getSpeechModule();
+  try {
+    speech?.stop();
+  } catch {
+    /* recognizer already stopped */
+  }
+}
+
+/** Stop listening immediately, discarding any pending result. */
+export function abortListening(): void {
+  if (!listening) return;
+  const speech = getSpeechModule();
+  try {
+    speech?.abort();
+  } catch {
+    /* recognizer already stopped */
+  }
+  teardown();
 }
 
 /**

@@ -31,7 +31,14 @@ yarn-error.*
 *.pem
 
 # local env files
-.env*.local
+.env
+.env.*
+!.env.example
+
+# store credentials — referenced by eas.json, never committed
+google-play-service-account.json
+*-service-account.json
+AuthKey_*.p8
 
 # typescript
 *.tsbuildinfo
